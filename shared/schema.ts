@@ -1,0 +1,159 @@
+import { sql } from 'drizzle-orm';
+import {
+  index,
+  jsonb,
+  pgTable,
+  timestamp,
+  varchar,
+  text,
+  integer,
+  boolean,
+} from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
+import { createInsertSchema } from "drizzle-zod";
+import { z } from "zod";
+
+// Session storage table (mandatory for Replit Auth)
+export const sessions = pgTable(
+  "sessions",
+  {
+    sid: varchar("sid").primaryKey(),
+    sess: jsonb("sess").notNull(),
+    expire: timestamp("expire").notNull(),
+  },
+  (table) => [index("IDX_session_expire").on(table.expire)],
+);
+
+// User storage table (mandatory for Replit Auth)
+export const users = pgTable("users", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  email: varchar("email").unique(),
+  firstName: varchar("first_name"),
+  lastName: varchar("last_name"),
+  profileImageUrl: varchar("profile_image_url"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Recipes table
+export const recipes = pgTable("recipes", {
+  id: varchar("id").primaryKey(),
+  spoonacularId: integer("spoonacular_id").unique().notNull(),
+  title: text("title").notNull(),
+  image: text("image"),
+  readyInMinutes: integer("ready_in_minutes"),
+  servings: integer("servings"),
+  summary: text("summary"),
+  instructions: text("instructions").array(),
+  ingredients: jsonb("ingredients").$type<Array<{
+    id: number;
+    name: string;
+    amount: number;
+    unit: string;
+    aisle: string;
+  }>>(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// User cookbook (saved recipes)
+export const userRecipes = pgTable("user_recipes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  recipeId: varchar("recipe_id").notNull().references(() => recipes.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Shopping list items
+export const shoppingListItems = pgTable("shopping_list_items", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  amount: text("amount"),
+  aisle: text("aisle").notNull(),
+  checked: boolean("checked").default(false),
+  recipeId: varchar("recipe_id").references(() => recipes.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// User recipe preferences (for better recommendations)
+export const userPreferences = pgTable("user_preferences", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  spoonacularId: integer("spoonacular_id").notNull(),
+  liked: boolean("liked").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Relations
+export const usersRelations = relations(users, ({ many }) => ({
+  userRecipes: many(userRecipes),
+  shoppingListItems: many(shoppingListItems),
+  preferences: many(userPreferences),
+}));
+
+export const recipesRelations = relations(recipes, ({ many }) => ({
+  userRecipes: many(userRecipes),
+  shoppingListItems: many(shoppingListItems),
+}));
+
+export const userRecipesRelations = relations(userRecipes, ({ one }) => ({
+  user: one(users, {
+    fields: [userRecipes.userId],
+    references: [users.id],
+  }),
+  recipe: one(recipes, {
+    fields: [userRecipes.recipeId],
+    references: [recipes.id],
+  }),
+}));
+
+export const shoppingListItemsRelations = relations(shoppingListItems, ({ one }) => ({
+  user: one(users, {
+    fields: [shoppingListItems.userId],
+    references: [users.id],
+  }),
+  recipe: one(recipes, {
+    fields: [shoppingListItems.recipeId],
+    references: [recipes.id],
+  }),
+}));
+
+export const userPreferencesRelations = relations(userPreferences, ({ one }) => ({
+  user: one(users, {
+    fields: [userPreferences.userId],
+    references: [users.id],
+  }),
+}));
+
+// Insert schemas
+export const insertRecipeSchema = createInsertSchema(recipes).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertUserRecipeSchema = createInsertSchema(userRecipes).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertShoppingListItemSchema = createInsertSchema(shoppingListItems).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertUserPreferenceSchema = createInsertSchema(userPreferences).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Types
+export type UpsertUser = typeof users.$inferInsert;
+export type User = typeof users.$inferSelect;
+export type Recipe = typeof recipes.$inferSelect;
+export type InsertRecipe = z.infer<typeof insertRecipeSchema>;
+export type UserRecipe = typeof userRecipes.$inferSelect;
+export type InsertUserRecipe = z.infer<typeof insertUserRecipeSchema>;
+export type ShoppingListItem = typeof shoppingListItems.$inferSelect;
+export type InsertShoppingListItem = z.infer<typeof insertShoppingListItemSchema>;
+export type UserPreference = typeof userPreferences.$inferSelect;
+export type InsertUserPreference = z.infer<typeof insertUserPreferenceSchema>;
