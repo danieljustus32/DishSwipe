@@ -89,4 +89,15 @@
     transform: translateX(100%) rotate(30deg);
     opacity: 0;
   }
+
+  /* Remove focus states from action buttons */
+  .action-button:focus {
+    outline: none !important;
+    box-shadow: none !important;
+  }
+  
+  .action-button:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
+  }
 }

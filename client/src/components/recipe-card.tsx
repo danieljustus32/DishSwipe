@@ -145,22 +145,16 @@ export default function RecipeCard({ recipe, onSwipe, onInfoClick }: RecipeCardP
         <Button
           size="lg"
           variant="outline"
-          className="w-16 h-16 rounded-full border-2 border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
-          onClick={(e) => {
-            e.currentTarget.blur();
-            onSwipe("left");
-          }}
+          className="action-button w-16 h-16 rounded-full border-2 border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground focus:outline-none focus:ring-0 focus:bg-destructive focus:text-destructive-foreground active:scale-95"
+          onClick={() => onSwipe("left")}
         >
           <X className="w-8 h-8" />
         </Button>
         <Button
           size="lg"
           variant="outline"
-          className="w-16 h-16 rounded-full border-2 border-green-400 text-green-400 hover:bg-green-400 hover:text-white bg-white"
-          onClick={(e) => {
-            e.currentTarget.blur();
-            onSwipe("right");
-          }}
+          className="action-button w-16 h-16 rounded-full border-2 border-green-400 text-green-400 hover:bg-green-400 hover:text-white bg-white focus:outline-none focus:ring-0 focus:bg-green-400 focus:text-white active:scale-95"
+          onClick={() => onSwipe("right")}
         >
           <Heart className="w-8 h-8" />
         </Button>
