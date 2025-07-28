@@ -141,8 +141,8 @@ export default function RecipeModal({ recipe, onClose }: RecipeModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-end">
-      <div className="bg-white rounded-t-3xl w-full max-h-[80vh] flex flex-col">
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-3xl w-full max-w-lg h-full max-h-[95vh] flex flex-col shadow-2xl">
         {/* Header */}
         <div className="sticky top-0 bg-white border-b border-border p-4 flex justify-between items-center rounded-t-3xl">
           <h3 className="text-lg font-bold truncate pr-4">{recipe.title}</h3>
@@ -157,7 +157,7 @@ export default function RecipeModal({ recipe, onClose }: RecipeModalProps) {
         </div>
 
         {/* Content */}
-        <ScrollArea className="flex-1">
+        <div className="flex-1 overflow-y-auto">
           <div className="p-4 space-y-6">
             {/* Recipe Image */}
             <img
@@ -224,7 +224,7 @@ export default function RecipeModal({ recipe, onClose }: RecipeModalProps) {
               </div>
             </div>
           </div>
-        </ScrollArea>
+        </div>
 
         {/* Action Buttons */}
         <div className="p-4 border-t border-border space-y-3">

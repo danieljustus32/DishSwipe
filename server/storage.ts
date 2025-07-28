@@ -193,15 +193,28 @@ export class DatabaseStorage implements IStorage {
   }
 
   async saveUserPreference(preference: InsertUserPreference): Promise<UserPreference> {
-    const [newPreference] = await db
-      .insert(userPreferences)
-      .values(preference)
-      .onConflictDoUpdate({
-        target: [userPreferences.userId, userPreferences.spoonacularId],
-        set: preference,
-      })
-      .returning();
-    return newPreference;
+    // First try to find existing preference
+    const existing = await this.getUserPreference(preference.userId, preference.spoonacularId);
+    
+    if (existing) {
+      // Update existing preference
+      const [updatedPreference] = await db
+        .update(userPreferences)
+        .set({ liked: preference.liked })
+        .where(and(
+          eq(userPreferences.userId, preference.userId),
+          eq(userPreferences.spoonacularId, preference.spoonacularId)
+        ))
+        .returning();
+      return updatedPreference;
+    } else {
+      // Insert new preference
+      const [newPreference] = await db
+        .insert(userPreferences)
+        .values(preference)
+        .returning();
+      return newPreference;
+    }
   }
 
   async getUserPreference(userId: string, spoonacularId: number): Promise<UserPreference | undefined> {

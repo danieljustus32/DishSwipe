@@ -82,7 +82,9 @@ export const userPreferences = pgTable("user_preferences", {
   spoonacularId: integer("spoonacular_id").notNull(),
   liked: boolean("liked").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => [
+  index("idx_user_preferences_unique").on(table.userId, table.spoonacularId),
+]);
 
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
