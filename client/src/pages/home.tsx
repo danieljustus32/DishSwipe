@@ -169,9 +169,9 @@ export default function Home() {
           <h1 className="text-xl font-bold">FlavorSwipe</h1>
           <div className="flex items-center space-x-4">
             <Avatar className="w-8 h-8">
-              <AvatarImage src={user?.profileImageUrl || undefined} />
+              <AvatarImage src={(user as any)?.profileImageUrl || undefined} />
               <AvatarFallback className="bg-white text-primary">
-                {user?.firstName?.charAt(0) || user?.email?.charAt(0) || "U"}
+                {(user as any)?.firstName?.charAt(0) || (user as any)?.email?.charAt(0) || "U"}
               </AvatarFallback>
             </Avatar>
             <Button 

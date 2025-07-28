@@ -81,15 +81,32 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createRecipe(recipe: InsertRecipe): Promise<Recipe> {
+    const recipeData = {
+      spoonacularId: recipe.spoonacularId,
+      title: recipe.title,
+      image: recipe.image,
+      readyInMinutes: recipe.readyInMinutes,
+      servings: recipe.servings,
+      summary: recipe.summary,
+      instructions: recipe.instructions,
+      ingredients: recipe.ingredients as any,
+      id: `recipe_${recipe.spoonacularId}`,
+    };
+
     const [newRecipe] = await db
       .insert(recipes)
-      .values({
-        ...recipe,
-        id: `recipe_${recipe.spoonacularId}`,
-      })
+      .values(recipeData)
       .onConflictDoUpdate({
         target: recipes.spoonacularId,
-        set: recipe,
+        set: {
+          title: recipe.title,
+          image: recipe.image,
+          readyInMinutes: recipe.readyInMinutes,
+          servings: recipe.servings,
+          summary: recipe.summary,
+          instructions: recipe.instructions,
+          ingredients: recipe.ingredients as any,
+        },
       })
       .returning();
     return newRecipe;
