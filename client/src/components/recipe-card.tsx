@@ -113,9 +113,9 @@ export default function RecipeCard({ recipe, onSwipe, onInfoClick }: RecipeCardP
         
         <div className="absolute inset-0 gradient-overlay"></div>
         
-        <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-          <h3 className="text-xl font-bold mb-2">{recipe.title}</h3>
-          <div className="flex items-center space-x-4 text-sm">
+        <div className="absolute top-0 left-0 right-16 p-6 text-white">
+          <h3 className="text-xl font-bold mb-2 drop-shadow-lg">{recipe.title}</h3>
+          <div className="flex items-center space-x-4 text-sm drop-shadow-md">
             <div className="flex items-center space-x-1">
               <Clock className="w-4 h-4" />
               <span>{recipe.readyInMinutes} min</span>
