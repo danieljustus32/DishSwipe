@@ -91,7 +91,7 @@ export default function RecipeCard({ recipe, onSwipe, onInfoClick }: RecipeCardP
     <div className="relative h-full">
       <div
         ref={cardRef}
-        className="card-swipe absolute inset-0 bg-white rounded-xl shadow-lg overflow-hidden cursor-grab active:cursor-grabbing"
+        className="card-swipe absolute inset-0 bg-white rounded-xl shadow-lg overflow-hidden cursor-grab active:cursor-grabbing flex flex-col"
         style={{
           transform: `translateX(${dragOffset.x}px) translateY(${dragOffset.y}px) rotate(${rotation}deg)`,
           opacity: opacity,
@@ -111,11 +111,10 @@ export default function RecipeCard({ recipe, onSwipe, onInfoClick }: RecipeCardP
           draggable={false}
         />
         
-        <div className="absolute inset-0 gradient-overlay"></div>
-        
-        <div className="absolute top-0 left-0 right-16 p-6 text-white">
-          <h3 className="text-xl font-bold mb-2 drop-shadow-lg">{recipe.title}</h3>
-          <div className="flex items-center space-x-4 text-sm drop-shadow-md">
+        {/* Content Section */}
+        <div className="flex-1 bg-white p-6 flex flex-col justify-start">
+          <h3 className="text-xl font-bold mb-2 text-foreground">{recipe.title}</h3>
+          <div className="flex items-center space-x-4 text-sm text-muted-foreground">
             <div className="flex items-center space-x-1">
               <Clock className="w-4 h-4" />
               <span>{recipe.readyInMinutes} min</span>
