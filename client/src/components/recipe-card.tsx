@@ -152,7 +152,8 @@ export default function RecipeCard({ recipe, onSwipe, onInfoClick }: RecipeCardP
         </Button>
         <Button
           size="lg"
-          className="w-16 h-16 rounded-full bg-success hover:bg-success/90 text-success-foreground"
+          variant="outline"
+          className="w-16 h-16 rounded-full border-2 border-green-400 text-green-400 hover:bg-green-400 hover:text-white bg-white"
           onClick={() => onSwipe("right")}
         >
           <Heart className="w-8 h-8" />
