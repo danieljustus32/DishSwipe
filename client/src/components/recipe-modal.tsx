@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
+import { useQueryClient } from "@tanstack/react-query";
 import { X, Clock, Users, ChefHat, Plus } from "lucide-react";
 import { isUnauthorizedError } from "@/lib/authUtils";
 
@@ -30,6 +31,7 @@ interface RecipeModalProps {
 
 export default function RecipeModal({ recipe, onClose }: RecipeModalProps) {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [isSaving, setIsSaving] = useState(false);
   const [isAddingToShoppingList, setIsAddingToShoppingList] = useState(false);
 
@@ -48,6 +50,9 @@ export default function RecipeModal({ recipe, onClose }: RecipeModalProps) {
       if (!response.ok) {
         throw new Error(`${response.status}: ${response.statusText}`);
       }
+
+      // Invalidate cookbook cache to ensure fresh data
+      queryClient.invalidateQueries({ queryKey: ["/api/cookbook"] });
 
       toast({
         title: "Recipe Saved!",
@@ -86,6 +91,9 @@ export default function RecipeModal({ recipe, onClose }: RecipeModalProps) {
       if (!response.ok) {
         throw new Error(`${response.status}: ${response.statusText}`);
       }
+
+      // Invalidate shopping list cache to ensure fresh data
+      queryClient.invalidateQueries({ queryKey: ["/api/shopping-list"] });
 
       toast({
         title: "Added to Shopping List!",
@@ -127,8 +135,11 @@ export default function RecipeModal({ recipe, onClose }: RecipeModalProps) {
         }),
       });
 
+      // Invalidate shopping list cache to ensure fresh data
+      queryClient.invalidateQueries({ queryKey: ["/api/shopping-list"] });
+
       toast({
-        title: "Added to List",
+        title: "Added to List", 
         description: `${ingredient.name} added to shopping list`,
       });
     } catch (error) {

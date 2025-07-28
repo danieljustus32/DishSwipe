@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Search, Heart, ShoppingCart } from "lucide-react";
@@ -35,6 +36,7 @@ interface Recipe {
 export default function Home() {
   const { user, isLoading } = useAuth();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [currentView, setCurrentView] = useState<ViewType>("discover");
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [currentRecipeIndex, setCurrentRecipeIndex] = useState(0);
@@ -124,6 +126,9 @@ export default function Home() {
             recipeId: currentRecipe.id,
           }),
         });
+        
+        // Invalidate cookbook cache to ensure fresh data
+        queryClient.invalidateQueries({ queryKey: ["/api/cookbook"] });
         
         toast({
           title: "Recipe Saved!",
