@@ -333,7 +333,7 @@ export class DatabaseStorage implements IStorage {
       const [updated] = await db
         .update(dailyUsage)
         .set({ 
-          likesCount: existing.likesCount + 1,
+          likesCount: (existing.likesCount || 0) + 1,
           updatedAt: new Date(),
         })
         .where(eq(dailyUsage.id, existing.id))
