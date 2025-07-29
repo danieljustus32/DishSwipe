@@ -63,6 +63,15 @@ export default function RecipeCard({ recipe, onSwipe, onInfoClick }: RecipeCardP
     onSwipe(direction);
   };
 
+  const handleButtonTouchEnd = (e: React.TouchEvent) => {
+    // Force blur on touch end
+    const target = e.currentTarget as HTMLElement;
+    target.blur();
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+  };
+
   const handleMouseDown = (e: React.MouseEvent) => {
     setIsDragging(true);
     startPos.current = { x: e.clientX, y: e.clientY };
@@ -177,8 +186,9 @@ export default function RecipeCard({ recipe, onSwipe, onInfoClick }: RecipeCardP
           ref={dislikeButtonRef}
           size="lg"
           variant="outline"
-          className="action-button w-16 h-16 rounded-full border-2 border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground focus:outline-none focus:ring-0 focus:bg-destructive focus:text-destructive-foreground active:scale-95"
+          className="action-button dislike-button w-16 h-16 rounded-full border-2 border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground bg-white"
           onClick={() => handleSwipe("left")}
+          onTouchEnd={handleButtonTouchEnd}
         >
           <X className="w-8 h-8" />
         </Button>
@@ -186,8 +196,9 @@ export default function RecipeCard({ recipe, onSwipe, onInfoClick }: RecipeCardP
           ref={likeButtonRef}
           size="lg"
           variant="outline"
-          className="action-button w-16 h-16 rounded-full border-2 border-green-400 text-green-400 hover:bg-green-400 hover:text-white bg-white focus:outline-none focus:ring-0 focus:bg-green-400 focus:text-white active:scale-95"
+          className="action-button like-button w-16 h-16 rounded-full border-2 border-green-400 text-green-400 hover:bg-green-400 hover:text-white bg-white"
           onClick={() => handleSwipe("right")}
+          onTouchEnd={handleButtonTouchEnd}
         >
           <Heart className="w-8 h-8" />
         </Button>
