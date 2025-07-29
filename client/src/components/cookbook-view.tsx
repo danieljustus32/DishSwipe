@@ -185,7 +185,7 @@ export default function CookbookView() {
             {userRecipes.map((userRecipe) => (
               <div
                 key={userRecipe.id}
-                className="bg-white rounded-xl shadow-sm border border-border overflow-hidden h-24 pb-[5px]"
+                className="bg-white rounded-xl shadow-sm border border-border overflow-hidden h-24"
               >
                 <div className="flex h-full">
                   {userRecipe.recipe.image && userRecipe.recipe.image.trim() !== '' ? (
@@ -217,7 +217,7 @@ export default function CookbookView() {
                       <span>{userRecipe.recipe.readyInMinutes} min</span> • 
                       <span> {userRecipe.recipe.servings} servings</span>
                     </div>
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-2 mb-[10px]">
                       <Button
                         size="sm"
                         variant="ghost"
