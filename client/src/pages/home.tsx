@@ -133,6 +133,7 @@ export default function Home() {
         toast({
           title: "Recipe Saved!",
           description: `${currentRecipe.title} added to your cookbook`,
+          duration: 1000,
         });
       }
     } catch (error) {

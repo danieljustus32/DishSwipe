@@ -57,6 +57,7 @@ export default function RecipeModal({ recipe, onClose }: RecipeModalProps) {
       toast({
         title: "Recipe Saved!",
         description: `${recipe.title} added to your cookbook`,
+        duration: 1000,
       });
     } catch (error) {
       if (isUnauthorizedError(error as Error)) {
