@@ -232,11 +232,15 @@ export default function RecipeModal({ recipe, onClose }: RecipeModalProps) {
             </div>
 
             {/* Nutrition Information */}
-            {recipe.nutrition && (
+            {recipe.nutrition ? (
               <NutritionChart 
                 nutrition={recipe.nutrition} 
                 servings={recipe.servings}
               />
+            ) : (
+              <div className="p-4 bg-gray-100 dark:bg-gray-800 rounded-lg">
+                <p className="text-sm text-muted-foreground">Nutrition information not available for this recipe</p>
+              </div>
             )}
 
             {/* Instructions */}

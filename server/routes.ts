@@ -88,16 +88,20 @@ function transformSpoonacularRecipe(recipe: SpoonacularRecipe) {
   let nutrition = null;
   if (recipe.nutrition?.nutrients) {
     const nutrients = recipe.nutrition.nutrients;
+    // Helper function to find nutrient by name (case insensitive)
+    const findNutrient = (name: string) => 
+      nutrients.find(n => n.name.toLowerCase().includes(name.toLowerCase()))?.amount || 0;
+    
     nutrition = {
-      calories: nutrients.find(n => n.name === "Calories")?.amount || 0,
-      carbohydrates: nutrients.find(n => n.name === "Carbohydrates")?.amount || 0,
-      fat: nutrients.find(n => n.name === "Fat")?.amount || 0,
-      protein: nutrients.find(n => n.name === "Protein")?.amount || 0,
-      fiber: nutrients.find(n => n.name === "Fiber")?.amount || 0,
-      sugar: nutrients.find(n => n.name === "Sugar")?.amount || 0,
-      sodium: nutrients.find(n => n.name === "Sodium")?.amount || 0,
-      cholesterol: nutrients.find(n => n.name === "Cholesterol")?.amount || 0,
-      saturatedFat: nutrients.find(n => n.name === "Saturated Fat")?.amount || 0,
+      calories: findNutrient("calories"),
+      carbohydrates: findNutrient("carbohydrates") || findNutrient("carbs"),
+      fat: findNutrient("fat"),
+      protein: findNutrient("protein"),
+      fiber: findNutrient("fiber"),
+      sugar: findNutrient("sugar"),
+      sodium: findNutrient("sodium"),
+      cholesterol: findNutrient("cholesterol"),
+      saturatedFat: findNutrient("saturated fat"),
     };
   }
 
