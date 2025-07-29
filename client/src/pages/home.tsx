@@ -5,7 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Search, Heart, ShoppingCart } from "lucide-react";
-import RecipeCard from "@/components/recipe-card";
+import RecipeCardStack from "@/components/recipe-card-stack";
 import RecipeModal from "@/components/recipe-modal";
 import CookbookView from "@/components/cookbook-view";
 import ShoppingView from "@/components/shopping-view";
@@ -79,15 +79,26 @@ export default function Home() {
   const loadRecipes = async () => {
     setIsLoadingRecipes(true);
     try {
-      const response = await fetch("/api/recipes/discover", {
-        credentials: "include",
-      });
-
-      if (!response.ok) {
-        throw new Error(`${response.status}: ${response.statusText}`);
+      // Load multiple batches of recipes for a better stack experience
+      const batchPromises = [];
+      const batchesToLoad = recipes.length === 0 ? 3 : 2; // Load 3 batches initially, 2 batches when refilling
+      
+      for (let i = 0; i < batchesToLoad; i++) {
+        batchPromises.push(
+          fetch("/api/recipes/discover", {
+            credentials: "include",
+          }).then(res => {
+            if (!res.ok) {
+              throw new Error(`${res.status}: ${res.statusText}`);
+            }
+            return res.json();
+          })
+        );
       }
 
-      const newRecipes = await response.json();
+      const batchResults = await Promise.all(batchPromises);
+      const newRecipes = batchResults.flat();
+      
       setRecipes(prev => [...prev, ...newRecipes]);
     } catch (error) {
       if (isUnauthorizedError(error as Error)) {
@@ -155,8 +166,8 @@ export default function Home() {
     const nextIndex = currentRecipeIndex + 1;
     setCurrentRecipeIndex(nextIndex);
 
-    // Load more recipes if we're running low
-    if (nextIndex >= recipes.length - 2) {
+    // Load more recipes if we're running low (keep 5+ recipes ahead)
+    if (nextIndex >= recipes.length - 5) {
       loadRecipes();
     }
   };
@@ -164,8 +175,6 @@ export default function Home() {
   const handleLogout = () => {
     window.location.href = "/api/logout";
   };
-
-  const currentRecipe = recipes[currentRecipeIndex];
 
   if (isLoading) {
     return (
@@ -251,29 +260,13 @@ export default function Home() {
         <main className="relative h-[calc(100vh-140px)] overflow-hidden">
           {currentView === "discover" && (
             <div className="absolute inset-0 p-4">
-              {isLoadingRecipes && recipes.length === 0 ? (
-                <div className="flex items-center justify-center h-full">
-                  <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-                    <p className="text-muted-foreground">Loading recipes...</p>
-                  </div>
-                </div>
-              ) : currentRecipe ? (
-                <RecipeCard
-                  recipe={currentRecipe}
-                  onSwipe={handleSwipe}
-                  onInfoClick={() => setSelectedRecipe(currentRecipe)}
-                />
-              ) : (
-                <div className="flex items-center justify-center h-full">
-                  <div className="text-center">
-                    <p className="text-muted-foreground mb-4">No more recipes available</p>
-                    <Button onClick={loadRecipes} disabled={isLoadingRecipes}>
-                      {isLoadingRecipes ? "Loading..." : "Load More"}
-                    </Button>
-                  </div>
-                </div>
-              )}
+              <RecipeCardStack
+                recipes={recipes}
+                currentIndex={currentRecipeIndex}
+                onSwipe={handleSwipe}
+                onInfoClick={setSelectedRecipe}
+                isLoading={isLoadingRecipes}
+              />
             </div>
           )}
 
