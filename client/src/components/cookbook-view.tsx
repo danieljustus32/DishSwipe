@@ -180,12 +180,12 @@ export default function CookbookView() {
           </div>
         </div>
       ) : (
-        <ScrollArea className="h-full pb-20">
+        <ScrollArea className="h-[calc(100vh-140px)]">
           <div className="space-y-4">
             {userRecipes.map((userRecipe) => (
               <div
                 key={userRecipe.id}
-                className="bg-white rounded-xl shadow-sm border border-border overflow-hidden h-24"
+                className="bg-white rounded-xl shadow-sm border border-border overflow-hidden h-24 pb-[5px]"
               >
                 <div className="flex h-full">
                   {userRecipe.recipe.image && userRecipe.recipe.image.trim() !== '' ? (
@@ -210,7 +210,7 @@ export default function CookbookView() {
                     }}
                   />
                   <div className="flex-1 p-4 min-w-0 flex flex-col justify-between">
-                    <h3 className="font-bold whitespace-nowrap text-ellipsis overflow-x-hidden overflow-y-visible">
+                    <h3 className="font-bold whitespace-nowrap">
                       {userRecipe.recipe.title}
                     </h3>
                     <div className="text-sm text-muted-foreground mb-2">
