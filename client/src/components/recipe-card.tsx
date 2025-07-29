@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Clock, Users, Info, X, Heart } from "lucide-react";
 
@@ -31,6 +31,18 @@ export default function RecipeCard({ recipe, onSwipe, onInfoClick }: RecipeCardP
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const cardRef = useRef<HTMLDivElement>(null);
   const startPos = useRef({ x: 0, y: 0 });
+  const dislikeButtonRef = useRef<HTMLButtonElement>(null);
+  const likeButtonRef = useRef<HTMLButtonElement>(null);
+
+  // Clear button focus when recipe changes
+  useEffect(() => {
+    if (dislikeButtonRef.current) {
+      dislikeButtonRef.current.blur();
+    }
+    if (likeButtonRef.current) {
+      likeButtonRef.current.blur();
+    }
+  }, [recipe.id]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     setIsDragging(true);
@@ -143,6 +155,7 @@ export default function RecipeCard({ recipe, onSwipe, onInfoClick }: RecipeCardP
       {/* Action Buttons */}
       <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-6 z-10">
         <Button
+          ref={dislikeButtonRef}
           size="lg"
           variant="outline"
           className="action-button w-16 h-16 rounded-full border-2 border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground focus:outline-none focus:ring-0 focus:bg-destructive focus:text-destructive-foreground active:scale-95"
@@ -151,6 +164,7 @@ export default function RecipeCard({ recipe, onSwipe, onInfoClick }: RecipeCardP
           <X className="w-8 h-8" />
         </Button>
         <Button
+          ref={likeButtonRef}
           size="lg"
           variant="outline"
           className="action-button w-16 h-16 rounded-full border-2 border-green-400 text-green-400 hover:bg-green-400 hover:text-white bg-white focus:outline-none focus:ring-0 focus:bg-green-400 focus:text-white active:scale-95"
