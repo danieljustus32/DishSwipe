@@ -60,9 +60,9 @@ export const mockRecipes = [
       { id: 20040, name: "arborio rice", amount: 1.5, unit: "cups", aisle: "Grain" },
       { id: 11260, name: "mixed mushrooms", amount: 8, unit: "oz", aisle: "Produce" },
       { id: 6194, name: "vegetable broth", amount: 4, unit: "cups", aisle: "Canned and Jarred" },
-      { id: 1033, name: "parmesan cheese", amount: 0.5, unit: "cup", aisle: "Cheese" },
+      { id: 1033, name: "parmesan cheese", amount: 0.666667, unit: "cup", aisle: "Cheese" },
       { id: 11282, name: "onion", amount: 1, unit: "medium", aisle: "Produce" },
-      { id: 14106, name: "white wine", amount: 0.5, unit: "cup", aisle: "Alcoholic Beverages" }
+      { id: 14106, name: "white wine", amount: 0.25, unit: "cup", aisle: "Alcoholic Beverages" }
     ],
     nutrition: {
       nutrients: [

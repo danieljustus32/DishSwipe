@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { X, Clock, Users, ChefHat, Plus } from "lucide-react";
 import { isUnauthorizedError } from "@/lib/authUtils";
+import { formatQuantity } from "@/lib/utils";
 import NutritionChart from "@/components/nutrition-chart";
 import RecipePlaceholder from "./recipe-placeholder";
 
@@ -228,7 +229,7 @@ export default function RecipeModal({ recipe, onClose, isFromCookbook = false }:
                 {recipe.ingredients?.map((ingredient, index) => (
                   <div key={index} className="flex justify-between items-center py-2 border-b border-border">
                     <span className="text-sm text-foreground">
-                      {ingredient.amount} {ingredient.unit} {ingredient.name}
+                      {formatQuantity(`${ingredient.amount} ${ingredient.unit}`)} {ingredient.name}
                     </span>
                     <Button
                       size="sm"
