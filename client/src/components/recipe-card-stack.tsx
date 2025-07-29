@@ -84,7 +84,8 @@ function SwipeableCard({
 
     const baseScale = 1 - Math.abs(cardDepth) * 0.05;
     const baseY = Math.abs(cardDepth) * 8;
-    const opacity = cardDepth < 0 ? 0 : Math.max(0.3, 1 - Math.abs(cardDepth) * 0.2);
+    // Top card should always be fully opaque, cards behind get reduced opacity
+    const opacity = cardDepth < 0 ? 0 : cardDepth === 0 ? 1 : Math.max(0.3, 1 - Math.abs(cardDepth) * 0.2);
     
     let transform = `translateY(${baseY}px) scale(${baseScale})`;
     let cardOpacity = opacity;
@@ -99,9 +100,12 @@ function SwipeableCard({
         transform = `translateX(${animateX}px) translateY(${dragOffset.y}px) rotate(${rotation}deg) scale(${baseScale})`;
         cardOpacity = 0;
       } else if (isDragging) {
-        // Apply drag transform
-        cardOpacity = 1 - Math.abs(dragOffset.x) / 300;
+        // Apply drag transform - only start fading when significantly moved
+        cardOpacity = Math.max(0.5, 1 - Math.abs(dragOffset.x) / 400);
         transform = `translateX(${dragOffset.x}px) translateY(${dragOffset.y}px) rotate(${rotation}deg) scale(${baseScale})`;
+      } else {
+        // Top card should always be fully opaque when not being interacted with
+        cardOpacity = 1;
       }
     }
 
