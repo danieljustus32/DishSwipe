@@ -4,6 +4,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
+import { formatQuantity } from "@/lib/utils";
 import { ShoppingCart, Trash2 } from "lucide-react";
 
 interface ShoppingListItem {
@@ -265,7 +266,7 @@ export default function ShoppingView() {
                             : "text-muted-foreground"
                         }`}
                       >
-                        {item.amount}
+                        {formatQuantity(item.amount)}
                       </span>
                       <Button
                         size="sm"
