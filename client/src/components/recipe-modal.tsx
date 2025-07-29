@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { X, Clock, Users, ChefHat, Plus } from "lucide-react";
 import { isUnauthorizedError } from "@/lib/authUtils";
+import NutritionChart from "@/components/nutrition-chart";
 
 interface Recipe {
   id: string;
@@ -22,6 +23,17 @@ interface Recipe {
     unit: string;
     aisle: string;
   }>;
+  nutrition?: {
+    calories: number;
+    carbohydrates: number;
+    fat: number;
+    protein: number;
+    fiber: number;
+    sugar: number;
+    sodium: number;
+    cholesterol: number;
+    saturatedFat: number;
+  } | null;
 }
 
 interface RecipeModalProps {
@@ -218,6 +230,14 @@ export default function RecipeModal({ recipe, onClose }: RecipeModalProps) {
                 )}
               </div>
             </div>
+
+            {/* Nutrition Information */}
+            {recipe.nutrition && (
+              <NutritionChart 
+                nutrition={recipe.nutrition} 
+                servings={recipe.servings}
+              />
+            )}
 
             {/* Instructions */}
             <div>

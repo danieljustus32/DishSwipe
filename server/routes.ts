@@ -34,6 +34,13 @@ interface SpoonacularRecipe {
     unit: string;
     aisle: string;
   }>;
+  nutrition?: {
+    nutrients: Array<{
+      name: string;
+      amount: number;
+      unit: string;
+    }>;
+  };
 }
 
 async function fetchSpoonacularRecipes(offset = 0, number = 10): Promise<SpoonacularRecipe[]> {
@@ -41,7 +48,7 @@ async function fetchSpoonacularRecipes(offset = 0, number = 10): Promise<Spoonac
     throw new Error("Spoonacular API key not configured");
   }
 
-  const url = `${SPOONACULAR_BASE_URL}/random?apiKey=${SPOONACULAR_API_KEY}&number=${number}&includeNutrition=false`;
+  const url = `${SPOONACULAR_BASE_URL}/random?apiKey=${SPOONACULAR_API_KEY}&number=${number}&includeNutrition=true`;
   
   const response = await fetch(url);
   if (!response.ok) {
@@ -57,7 +64,7 @@ async function fetchSpoonacularRecipeDetails(id: number): Promise<SpoonacularRec
     throw new Error("Spoonacular API key not configured");
   }
 
-  const url = `${SPOONACULAR_BASE_URL}/${id}/information?apiKey=${SPOONACULAR_API_KEY}&includeNutrition=false`;
+  const url = `${SPOONACULAR_BASE_URL}/${id}/information?apiKey=${SPOONACULAR_API_KEY}&includeNutrition=true`;
   
   const response = await fetch(url);
   if (!response.ok) {
@@ -77,6 +84,23 @@ function transformSpoonacularRecipe(recipe: SpoonacularRecipe) {
     aisle: ing.aisle || "Other",
   })) || [];
 
+  // Extract nutrition data if available
+  let nutrition = null;
+  if (recipe.nutrition?.nutrients) {
+    const nutrients = recipe.nutrition.nutrients;
+    nutrition = {
+      calories: nutrients.find(n => n.name === "Calories")?.amount || 0,
+      carbohydrates: nutrients.find(n => n.name === "Carbohydrates")?.amount || 0,
+      fat: nutrients.find(n => n.name === "Fat")?.amount || 0,
+      protein: nutrients.find(n => n.name === "Protein")?.amount || 0,
+      fiber: nutrients.find(n => n.name === "Fiber")?.amount || 0,
+      sugar: nutrients.find(n => n.name === "Sugar")?.amount || 0,
+      sodium: nutrients.find(n => n.name === "Sodium")?.amount || 0,
+      cholesterol: nutrients.find(n => n.name === "Cholesterol")?.amount || 0,
+      saturatedFat: nutrients.find(n => n.name === "Saturated Fat")?.amount || 0,
+    };
+  }
+
   return {
     spoonacularId: recipe.id,
     title: recipe.title,
@@ -86,6 +110,7 @@ function transformSpoonacularRecipe(recipe: SpoonacularRecipe) {
     summary: recipe.summary,
     instructions,
     ingredients,
+    nutrition,
   };
 }
 

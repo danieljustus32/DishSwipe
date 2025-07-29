@@ -52,6 +52,17 @@ export const recipes = pgTable("recipes", {
     unit: string;
     aisle: string;
   }>>(),
+  nutrition: jsonb("nutrition").$type<{
+    calories: number;
+    carbohydrates: number;
+    fat: number;
+    protein: number;
+    fiber: number;
+    sugar: number;
+    sodium: number;
+    cholesterol: number;
+    saturatedFat: number;
+  } | null>(),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

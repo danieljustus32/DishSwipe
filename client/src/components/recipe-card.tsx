@@ -18,6 +18,17 @@ interface Recipe {
     unit: string;
     aisle: string;
   }>;
+  nutrition?: {
+    calories: number;
+    carbohydrates: number;
+    fat: number;
+    protein: number;
+    fiber: number;
+    sugar: number;
+    sodium: number;
+    cholesterol: number;
+    saturatedFat: number;
+  } | null;
 }
 
 interface RecipeCardProps {
