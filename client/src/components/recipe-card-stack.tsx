@@ -84,8 +84,8 @@ function SwipeableCard({
 
     const baseScale = 1 - Math.abs(cardDepth) * 0.05;
     const baseY = Math.abs(cardDepth) * 8;
-    // Top card should always be fully opaque, cards behind get reduced opacity
-    const opacity = cardDepth < 0 ? 0 : cardDepth === 0 ? 1 : Math.max(0.3, 1 - Math.abs(cardDepth) * 0.2);
+    // Top card and next card should be fully opaque, cards further behind get reduced opacity
+    const opacity = cardDepth < 0 ? 0 : (cardDepth === 0 || cardDepth === 1) ? 1 : Math.max(0.3, 1 - Math.abs(cardDepth) * 0.2);
     
     let transform = `translateY(${baseY}px) scale(${baseScale})`;
     let cardOpacity = opacity;
@@ -113,12 +113,7 @@ function SwipeableCard({
       transform,
       opacity: cardOpacity,
       zIndex: 10 - cardDepth,
-      // Exclude opacity from transitions to ensure immediate opacity changes
-      transition: isTopCard 
-        ? (isDragging ? 'none' : 'transform 0.2s ease-out')
-        : isAnimating 
-          ? 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), z-index 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
-          : 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+      transition: isAnimating || !isTopCard ? 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)' : isDragging ? 'none' : 'transform 0.2s ease-out',
       pointerEvents: isTopCard ? 'auto' as const : 'none' as const
     };
   };
