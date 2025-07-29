@@ -90,6 +90,7 @@ export class DatabaseStorage implements IStorage {
       summary: recipe.summary,
       instructions: recipe.instructions,
       ingredients: recipe.ingredients as any,
+      nutrition: recipe.nutrition as any,
       id: `recipe_${recipe.spoonacularId}`,
     };
 
@@ -106,6 +107,7 @@ export class DatabaseStorage implements IStorage {
           summary: recipe.summary,
           instructions: recipe.instructions,
           ingredients: recipe.ingredients as any,
+          nutrition: recipe.nutrition as any,
         },
       })
       .returning();
