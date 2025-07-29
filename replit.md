@@ -136,3 +136,7 @@ The application is designed to run seamlessly on Replit with minimal configurati
 - ✓ Implemented decimal-to-fraction conversion system for shopping list quantities
 - ✓ Added formatQuantity utility function with comprehensive fraction mapping
 - ✓ Enhanced shopping list display to show user-friendly fractions (e.g., 2/3 pound, 1/4 cup)
+- ✓ Implemented duplicate ingredient detection and merging system for shopping lists
+- ✓ Added addShoppingListItemWithMerging method to combine similar ingredients by quantity
+- ✓ Created ingredient similarity detection with name normalization and partial matching
+- ✓ Enhanced shopping list to prevent duplicate ingredients and merge quantities automatically

@@ -170,6 +170,43 @@ export class DatabaseStorage implements IStorage {
     return newItem;
   }
 
+  async addShoppingListItemWithMerging(item: InsertShoppingListItem): Promise<ShoppingListItem> {
+    // Import utility functions
+    const { areIngredientsSimilar, combineQuantities } = await import('./quantityUtils');
+    
+    // Check for existing similar ingredients for this user
+    const existingItems = await db
+      .select()
+      .from(shoppingListItems)
+      .where(eq(shoppingListItems.userId, item.userId));
+
+    // Find if there's a similar ingredient that can be merged
+    const similarItem = existingItems.find(existing => 
+      areIngredientsSimilar(existing.name, item.name)
+    );
+
+    if (similarItem) {
+      // Merge the quantities and update the existing item
+      const combinedAmount = combineQuantities(similarItem.amount || null, item.amount || null);
+      
+      const [updatedItem] = await db
+        .update(shoppingListItems)
+        .set({ 
+          amount: combinedAmount,
+          // Keep the aisle from the original item if new item doesn't have one
+          aisle: item.aisle || similarItem.aisle
+        })
+        .where(eq(shoppingListItems.id, similarItem.id))
+        .returning();
+      
+      return updatedItem;
+    } else {
+      // No similar item found, add as new
+      const [newItem] = await db.insert(shoppingListItems).values(item).returning();
+      return newItem;
+    }
+  }
+
   async updateShoppingListItem(id: string, updates: Partial<ShoppingListItem>): Promise<ShoppingListItem> {
     const [updatedItem] = await db
       .update(shoppingListItems)

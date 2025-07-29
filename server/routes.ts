@@ -325,7 +325,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const items = [];
       for (const ingredient of recipe.ingredients) {
-        const item = await storage.addShoppingListItem({
+        const item = await storage.addShoppingListItemWithMerging({
           userId,
           name: ingredient.name,
           amount: `${ingredient.amount} ${ingredient.unit}`.trim(),
