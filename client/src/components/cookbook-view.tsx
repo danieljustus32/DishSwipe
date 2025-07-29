@@ -188,17 +188,27 @@ export default function CookbookView() {
                 className="bg-white rounded-xl shadow-sm border border-border overflow-hidden"
               >
                 <div className="flex">
-                  {userRecipe.recipe.image ? (
+                  {userRecipe.recipe.image && userRecipe.recipe.image.trim() !== '' ? (
                     <img
                       src={userRecipe.recipe.image}
                       alt={userRecipe.recipe.title}
                       className="w-20 h-20 object-cover flex-shrink-0"
+                      onError={(e) => {
+                        // If image fails to load, hide it and show placeholder
+                        e.currentTarget.style.display = 'none';
+                        const placeholderElement = e.currentTarget.nextElementSibling as HTMLElement;
+                        if (placeholderElement) {
+                          placeholderElement.style.display = 'flex';
+                        }
+                      }}
                     />
-                  ) : (
-                    <RecipePlaceholder 
-                      className="w-20 h-20 flex-shrink-0" 
-                    />
-                  )}
+                  ) : null}
+                  <RecipePlaceholder 
+                    className="w-20 h-20 flex-shrink-0" 
+                    style={{ 
+                      display: (userRecipe.recipe.image && userRecipe.recipe.image.trim() !== '') ? 'none' : 'flex' 
+                    }}
+                  />
                   <div className="flex-1 p-4 min-w-0">
                     <h3 className="font-bold text-foreground mb-1 truncate">
                       {userRecipe.recipe.title}

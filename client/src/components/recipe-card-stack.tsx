@@ -195,19 +195,29 @@ function SwipeableCard({
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
-      {recipe.image ? (
+      {recipe.image && recipe.image.trim() !== '' ? (
         <img
           src={recipe.image}
           alt={recipe.title}
           className="w-full h-64 object-cover"
           draggable={false}
+          onError={(e) => {
+            // If image fails to load, hide it and show placeholder
+            e.currentTarget.style.display = 'none';
+            const placeholderElement = e.currentTarget.nextElementSibling as HTMLElement;
+            if (placeholderElement) {
+              placeholderElement.style.display = 'flex';
+            }
+          }}
         />
-      ) : (
-        <RecipePlaceholder 
-          className="w-full h-64" 
-          title={recipe.title}
-        />
-      )}
+      ) : null}
+      <RecipePlaceholder 
+        className="w-full h-64" 
+        title={recipe.title}
+        style={{ 
+          display: (recipe.image && recipe.image.trim() !== '') ? 'none' : 'flex' 
+        }}
+      />
       
       {/* Content Section */}
       <div className="flex-1 bg-white dark:bg-gray-800 p-6 flex flex-col justify-start">

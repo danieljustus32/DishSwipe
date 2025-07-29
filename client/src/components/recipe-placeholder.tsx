@@ -1,11 +1,15 @@
 interface RecipePlaceholderProps {
   className?: string;
   title?: string;
+  style?: React.CSSProperties;
 }
 
-export default function RecipePlaceholder({ className = "", title }: RecipePlaceholderProps) {
+export default function RecipePlaceholder({ className = "", title, style }: RecipePlaceholderProps) {
   return (
-    <div className={`bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 flex items-center justify-center ${className}`}>
+    <div 
+      className={`bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 flex items-center justify-center ${className}`}
+      style={style}
+    >
       <div className="text-center">
         <svg 
           width="64" 
