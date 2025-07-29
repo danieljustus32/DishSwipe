@@ -185,14 +185,14 @@ export default function CookbookView() {
             {userRecipes.map((userRecipe) => (
               <div
                 key={userRecipe.id}
-                className="bg-white rounded-xl shadow-sm border border-border overflow-hidden"
+                className="bg-white rounded-xl shadow-sm border border-border overflow-hidden h-24"
               >
-                <div className="flex">
+                <div className="flex h-full">
                   {userRecipe.recipe.image && userRecipe.recipe.image.trim() !== '' ? (
                     <img
                       src={userRecipe.recipe.image}
                       alt={userRecipe.recipe.title}
-                      className="w-20 h-20 object-cover flex-shrink-0"
+                      className="w-24 h-full object-cover flex-shrink-0"
                       onError={(e) => {
                         // If image fails to load, hide it and show placeholder
                         e.currentTarget.style.display = 'none';
@@ -204,13 +204,13 @@ export default function CookbookView() {
                     />
                   ) : null}
                   <RecipePlaceholder 
-                    className="w-20 h-20 flex-shrink-0" 
+                    className="w-24 h-full flex-shrink-0" 
                     style={{ 
                       display: (userRecipe.recipe.image && userRecipe.recipe.image.trim() !== '') ? 'none' : 'flex' 
                     }}
                   />
-                  <div className="flex-1 p-4 min-w-0">
-                    <h3 className="font-bold text-foreground mb-1 truncate">
+                  <div className="flex-1 p-4 min-w-0 flex flex-col justify-between">
+                    <h3 className="font-bold text-foreground mb-1 line-clamp-2 leading-tight">
                       {userRecipe.recipe.title}
                     </h3>
                     <div className="text-sm text-muted-foreground mb-2">
