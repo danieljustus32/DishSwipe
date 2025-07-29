@@ -9,10 +9,14 @@ import {
   insertUserPreferenceSchema,
 } from "@shared/schema";
 import { z } from "zod";
+import { mockRecipes, getRandomMockRecipes } from "./mockRecipes";
 
 // Spoonacular API configuration
 const SPOONACULAR_API_KEY = process.env.SPOONACULAR_API_KEY || process.env.VITE_SPOONACULAR_API_KEY || "";
 const SPOONACULAR_BASE_URL = "https://api.spoonacular.com/recipes";
+const USE_MOCK_DATA = process.env.USE_MOCK_DATA !== "false"; // Default to true for development
+
+console.log(`Environment: NODE_ENV=${process.env.NODE_ENV}, USE_MOCK_DATA=${USE_MOCK_DATA}, API_KEY_EXISTS=${!!SPOONACULAR_API_KEY}`);
 
 interface SpoonacularRecipe {
   id: number;
@@ -44,6 +48,12 @@ interface SpoonacularRecipe {
 }
 
 async function fetchSpoonacularRecipes(offset = 0, number = 10): Promise<SpoonacularRecipe[]> {
+  // Use mock data in development or when USE_MOCK_DATA is true
+  if (USE_MOCK_DATA) {
+    console.log("Using mock recipe data for development");
+    return getRandomMockRecipes(number);
+  }
+
   if (!SPOONACULAR_API_KEY) {
     throw new Error("Spoonacular API key not configured");
   }
@@ -60,6 +70,16 @@ async function fetchSpoonacularRecipes(offset = 0, number = 10): Promise<Spoonac
 }
 
 async function fetchSpoonacularRecipeDetails(id: number): Promise<SpoonacularRecipe> {
+  // Use mock data in development or when USE_MOCK_DATA is true
+  if (USE_MOCK_DATA) {
+    const mockRecipe = mockRecipes.find(recipe => recipe.id === id);
+    if (mockRecipe) {
+      return mockRecipe;
+    }
+    // If not found in mock data, return a generic mock recipe with the requested ID
+    return { ...mockRecipes[0], id };
+  }
+
   if (!SPOONACULAR_API_KEY) {
     throw new Error("Spoonacular API key not configured");
   }
