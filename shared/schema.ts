@@ -188,8 +188,16 @@ export const insertDailyUsageSchema = createInsertSchema(dailyUsage).omit({
   updatedAt: true,
 });
 
+// Profile update schema for user-editable fields
+export const updateProfileSchema = z.object({
+  firstName: z.string().min(1, "First name is required").max(50, "First name too long"),
+  lastName: z.string().min(1, "Last name is required").max(50, "Last name too long"),
+  email: z.string().email("Invalid email address"),
+});
+
 // Types
 export type UpsertUser = typeof users.$inferInsert;
+export type UpdateProfile = z.infer<typeof updateProfileSchema>;
 export type User = typeof users.$inferSelect;
 export type Recipe = typeof recipes.$inferSelect;
 export type InsertRecipe = z.infer<typeof insertRecipeSchema>;

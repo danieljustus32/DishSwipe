@@ -5,11 +5,12 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Crown, Star, Zap, ChefHat, ArrowLeft } from "lucide-react";
+import { Crown, Star, Zap, ChefHat, ArrowLeft, Edit } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
+import { ProfileEditForm } from "@/components/ProfileEditForm";
 
 // Load Stripe (optional for development)
 const stripePromise = import.meta.env.VITE_STRIPE_PUBLIC_KEY 
@@ -199,6 +200,7 @@ function SubscriptionCard() {
 export default function Profile() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
 
   const cancelSubscription = useMutation({
     mutationFn: async () => {
@@ -270,39 +272,66 @@ export default function Profile() {
 
         <div className="grid gap-6 md:grid-cols-2">
           {/* Profile Information */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Profile Information</CardTitle>
-              <CardDescription>Your account details</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <label className="text-sm font-medium">Email</label>
-                <div className="text-sm text-muted-foreground mt-1">
-                  {userStatus.email || "No email set"}
+          {isEditingProfile ? (
+            <ProfileEditForm 
+              userStatus={userStatus}
+              onCancel={() => setIsEditingProfile(false)}
+              onSuccess={() => setIsEditingProfile(false)}
+            />
+          ) : (
+            <Card>
+              <CardHeader>
+                <CardTitle>Profile Information</CardTitle>
+                <CardDescription>Your account details</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium">Email</label>
+                  <div className="text-sm text-muted-foreground mt-1">
+                    {userStatus.email || "No email set"}
+                  </div>
                 </div>
-              </div>
-              
-              <div>
-                <label className="text-sm font-medium">Name</label>
-                <div className="text-sm text-muted-foreground mt-1">
-                  {userStatus.firstName && userStatus.lastName 
-                    ? `${userStatus.firstName} ${userStatus.lastName}`
-                    : "No name set"
-                  }
+                
+                <div>
+                  <label className="text-sm font-medium">Name</label>
+                  <div className="text-sm text-muted-foreground mt-1">
+                    {userStatus.firstName && userStatus.lastName 
+                      ? `${userStatus.firstName} ${userStatus.lastName}`
+                      : "No name set"
+                    }
+                  </div>
                 </div>
-              </div>
 
-              <div className="pt-4">
-                <Button variant="outline" className="w-full">
-                  Update Profile Information
-                </Button>
-                <p className="text-xs text-muted-foreground mt-2 text-center">
-                  To update your email or password, please contact support
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+                <div className="pt-4 space-y-3">
+                  <Button 
+                    variant="outline" 
+                    className="w-full"
+                    onClick={() => setIsEditingProfile(true)}
+                  >
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit Profile Information
+                  </Button>
+                  
+                  {/* Password Reset Section */}
+                  <div className="bg-muted/50 rounded-lg p-3">
+                    <h4 className="text-sm font-medium mb-2">Password & Security</h4>
+                    <p className="text-xs text-muted-foreground mb-3">
+                      Your account is secured through Replit's authentication system. 
+                      To change your password or manage security settings, please visit your Replit account settings.
+                    </p>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      className="text-xs h-7"
+                      onClick={() => window.open('https://replit.com/account', '_blank')}
+                    >
+                      Manage Replit Account →
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Usage Status */}
           <Card>

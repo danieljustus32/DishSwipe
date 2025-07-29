@@ -8,6 +8,7 @@ import {
   insertUserRecipeSchema,
   insertShoppingListItemSchema,
   insertUserPreferenceSchema,
+  updateProfileSchema,
 } from "@shared/schema";
 import { z } from "zod";
 import { mockRecipes, getRandomMockRecipes } from "./mockRecipes";
@@ -160,6 +161,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
+  // Profile update route
+  app.put('/api/profile', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const validatedData = updateProfileSchema.parse(req.body);
+      
+      const updatedUser = await storage.updateUserProfile(userId, validatedData);
+      res.json(updatedUser);
+    } catch (error: any) {
+      console.error("Error updating profile:", error);
+      if (error.issues) {
+        // Zod validation error
+        res.status(400).json({ 
+          message: "Validation failed", 
+          errors: error.issues.map((issue: any) => ({
+            field: issue.path.join('.'),
+            message: issue.message
+          }))
+        });
+      } else {
+        res.status(500).json({ message: "Failed to update profile" });
+      }
     }
   });
 
