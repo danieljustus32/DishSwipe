@@ -538,6 +538,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Cancel subscription route
+  app.post('/api/cancel-subscription', isAuthenticated, async (req: any, res) => {
+    try {
+      if (!stripe) {
+        return res.status(503).json({ message: "Payment processing not available. Please contact support." });
+      }
+
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      if (!user.stripeSubscriptionId) {
+        return res.status(400).json({ message: "No active subscription found" });
+      }
+
+      // Cancel the subscription at the end of the current billing period
+      const subscription = await stripe.subscriptions.update(
+        user.stripeSubscriptionId,
+        {
+          cancel_at_period_end: true,
+        }
+      );
+
+      // Update user's Gold status (they keep access until period ends)
+      // Note: We don't immediately revoke Gold status, Stripe webhook should handle this
+      // For now, we'll keep them as Gold until the webhook confirms cancellation
+
+      res.json({
+        message: "Subscription will be cancelled at the end of the current billing period",
+        subscriptionId: subscription.id,
+        cancelAtPeriodEnd: subscription.cancel_at_period_end,
+        currentPeriodEnd: subscription.current_period_end,
+      });
+    } catch (error: any) {
+      console.error("Error cancelling subscription:", error);
+      res.status(400).json({ error: { message: error.message } });
+    }
+  });
+
   // Simple webhook endpoint for Stripe events (for future use)
   app.post('/api/webhook/stripe', async (req, res) => {
     // TODO: Implement proper webhook handling when needed

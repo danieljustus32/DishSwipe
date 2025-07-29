@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
+import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Crown, Star, Zap, ChefHat } from "lucide-react";
+import { Crown, Star, Zap, ChefHat, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { loadStripe } from "@stripe/stripe-js";
@@ -199,6 +200,28 @@ export default function Profile() {
   const { user } = useAuth();
   const { toast } = useToast();
 
+  const cancelSubscription = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("POST", "/api/cancel-subscription");
+      return await response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/user/status'] });
+      toast({
+        title: "Subscription Cancelled",
+        description: "Your FlavorSwipe Gold subscription has been cancelled. You'll continue to have access until your billing period ends.",
+      });
+    },
+    onError: (error) => {
+      console.error("Cancel subscription error:", error);
+      toast({
+        title: "Cancellation Error", 
+        description: "Failed to cancel subscription. Please contact support.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const { data: userStatus, isLoading } = useQuery<UserStatus>({
     queryKey: ['/api/user/status'],
     retry: false,
@@ -230,7 +253,17 @@ export default function Profile() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 to-red-50 dark:from-gray-900 dark:to-gray-800 p-4">
       <div className="max-w-4xl mx-auto space-y-6">
-        <div className="text-center py-8">
+        {/* Header with Back Button */}
+        <div className="flex items-center justify-between py-4">
+          <Link href="/">
+            <Button variant="ghost" size="sm" className="flex items-center gap-2">
+              <ArrowLeft className="h-4 w-4" />
+              Back to Discover
+            </Button>
+          </Link>
+        </div>
+        
+        <div className="text-center py-4">
           <h1 className="text-3xl font-bold mb-2">Your Profile</h1>
           <p className="text-muted-foreground">Manage your account and subscription</p>
         </div>
@@ -293,12 +326,25 @@ export default function Profile() {
             </CardHeader>
             <CardContent>
               {userStatus.isGoldMember ? (
-                <div className="text-center py-6">
+                <div className="text-center py-6 space-y-4">
                   <Crown className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
                   <h3 className="font-semibold text-lg mb-2">Premium Member</h3>
                   <p className="text-muted-foreground">
                     You have unlimited recipe likes and access to all premium features
                   </p>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    className="mt-4"
+                    disabled={cancelSubscription.isPending}
+                    onClick={() => {
+                      if (confirm("Are you sure you want to cancel your FlavorSwipe Gold subscription? You'll lose unlimited likes and premium features.")) {
+                        cancelSubscription.mutate();
+                      }
+                    }}
+                  >
+                    {cancelSubscription.isPending ? "Cancelling..." : "Cancel Subscription"}
+                  </Button>
                 </div>
               ) : (
                 <div className="space-y-4">
