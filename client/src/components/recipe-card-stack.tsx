@@ -48,6 +48,7 @@ interface SwipeableCardProps {
   onInfoClick: () => void;
   isAnimating: boolean;
   swipeDirection?: "left" | "right";
+  isDismissed: boolean;
 }
 
 function SwipeableCard({ 
@@ -57,7 +58,8 @@ function SwipeableCard({
   onSwipe, 
   onInfoClick,
   isAnimating,
-  swipeDirection
+  swipeDirection,
+  isDismissed
 }: SwipeableCardProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
@@ -68,6 +70,17 @@ function SwipeableCard({
 
   // Calculate card position and scale based on its depth in the stack
   const getCardStyle = () => {
+    // If this card has been dismissed, keep it off-screen
+    if (isDismissed && !isAnimating) {
+      return {
+        transform: 'translateX(-1000px)',
+        opacity: 0,
+        zIndex: -1,
+        transition: 'none',
+        pointerEvents: 'none' as const
+      };
+    }
+
     const baseScale = 1 - Math.abs(cardDepth) * 0.05;
     const baseY = Math.abs(cardDepth) * 8;
     const opacity = cardDepth < 0 ? 0 : Math.max(0.3, 1 - Math.abs(cardDepth) * 0.2);
@@ -95,7 +108,8 @@ function SwipeableCard({
       transform,
       opacity: cardOpacity,
       zIndex: 10 - cardDepth,
-      transition: isAnimating || !isTopCard ? 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)' : isDragging ? 'none' : 'transform 0.2s ease-out'
+      transition: isAnimating || !isTopCard ? 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)' : isDragging ? 'none' : 'transform 0.2s ease-out',
+      pointerEvents: isTopCard ? 'auto' as const : 'none' as const
     };
   };
 
@@ -158,8 +172,8 @@ function SwipeableCard({
     setDragOffset({ x: 0, y: 0 });
   };
 
-  // Don't render cards that are too far behind
-  if (cardDepth < -1 || cardDepth > 2) {
+  // Don't render cards that are too far behind or dismissed (unless animating)
+  if ((cardDepth < -1 || cardDepth > 2) && !(isDismissed && isAnimating)) {
     return null;
   }
 
@@ -245,20 +259,37 @@ export default function RecipeCardStack({
   isLoading 
 }: RecipeCardStackProps) {
   const [animatingCard, setAnimatingCard] = useState<{ index: number; direction: "left" | "right" } | null>(null);
+  const [dismissedCards, setDismissedCards] = useState<Set<number>>(new Set());
   const { toast } = useToast();
 
   const handleSwipe = (direction: "left" | "right") => {
     const currentRecipe = recipes[currentIndex];
-    if (!currentRecipe) return;
+    if (!currentRecipe || animatingCard) return; // Prevent multiple swipes during animation
 
+    // Mark card as dismissed
+    setDismissedCards(prev => new Set([...Array.from(prev), currentIndex]));
+    
     // Start animation
     setAnimatingCard({ index: currentIndex, direction });
 
-    // Clear animation after it completes
+    // Clear animation and call parent handler
     setTimeout(() => {
       setAnimatingCard(null);
       onSwipe(direction);
+      
+      // Clean up dismissed cards that are far behind current index
+      const nextIndex = currentIndex + 1;
+      setDismissedCards(prev => {
+        const newSet = new Set(prev);
+        Array.from(prev).forEach(index => {
+          if (index < nextIndex - 5) {
+            newSet.delete(index);
+          }
+        });
+        return newSet;
+      });
     }, 300);
+
   };
 
   // Show loading state when no recipes are available
@@ -314,6 +345,7 @@ export default function RecipeCardStack({
             onInfoClick={() => onInfoClick(recipe)}
             isAnimating={animatingCard?.index === actualIndex}
             swipeDirection={animatingCard?.index === actualIndex ? animatingCard.direction : undefined}
+            isDismissed={dismissedCards.has(actualIndex)}
           />
         );
       })}
