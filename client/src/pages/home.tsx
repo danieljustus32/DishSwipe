@@ -140,7 +140,7 @@ export default function Home() {
 
       // If liked, save to cookbook
       if (direction === "right") {
-        await fetch("/api/cookbook", {
+        const response = await fetch("/api/cookbook", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
@@ -149,14 +149,23 @@ export default function Home() {
           }),
         });
         
-        // Invalidate cookbook cache to ensure fresh data
-        queryClient.invalidateQueries({ queryKey: ["/api/cookbook"] });
-        
-        toast({
-          title: "Recipe Saved!",
-          description: `${currentRecipe.title} added to your cookbook`,
-          duration: 1000,
-        });
+        if (response.ok) {
+          // Invalidate cookbook cache to ensure fresh data
+          queryClient.invalidateQueries({ queryKey: ["/api/cookbook"] });
+          
+          toast({
+            title: "Recipe Saved!",
+            description: `${currentRecipe.title} added to your cookbook`,
+            duration: 1000,
+          });
+        } else if (response.status === 409) {
+          // Recipe already saved - still show success since it's saved
+          toast({
+            title: "Recipe Already Saved!",
+            description: `${currentRecipe.title} is already in your cookbook`,
+            duration: 1000,
+          });
+        }
       }
     } catch (error) {
       console.error("Error saving preference:", error);

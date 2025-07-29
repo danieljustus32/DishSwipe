@@ -52,16 +52,19 @@ The application follows a monorepo structure with clear separation between clien
 
 ### Recipe Discovery Flow
 1. Frontend requests random recipes from backend
-2. Backend fetches from Spoonacular API or serves cached recipes
+2. Backend fetches from Spoonacular API, filtering out previously rated recipes
 3. Users swipe left (dislike) or right (like) on recipes
-4. Preferences are stored for future recommendations
+4. Preferences are stored for future recommendations and filtering
 5. Users can view detailed recipe information via modal
+6. System ensures users never see the same recipe twice in discovery mode
 
 ### Cookbook Management
 1. Users can save liked recipes to their personal cookbook
 2. Recipes are stored locally to reduce API calls
-3. Users can view, organize, and remove saved recipes
-4. Recipe details include ingredients, instructions, and metadata
+3. Duplicate prevention ensures no recipe can be saved twice
+4. Users can view, organize, and remove saved recipes
+5. Recipe modal from cookbook hides "Add to Cookbook" button
+6. Recipe details include ingredients, instructions, and metadata
 
 ### Shopping List Generation
 1. Users can add recipe ingredients to shopping list
@@ -118,3 +121,12 @@ The application follows a monorepo structure with clear separation between clien
 - Development banner injection for external access
 
 The application is designed to run seamlessly on Replit with minimal configuration, while maintaining the flexibility to deploy on other platforms with appropriate environment variable configuration.
+
+## Recent Changes
+
+**January 29, 2025**
+- ✓ Implemented recipe filtering system to prevent showing previously liked/disliked recipes
+- ✓ Added duplicate prevention for cookbook entries with graceful error handling
+- ✓ Enhanced recipe modal to hide "Add to Cookbook" button when viewed from cookbook
+- ✓ Improved user experience with better toast notifications for duplicate scenarios
+- ✓ Added getUserRatedSpoonacularIds() method to storage interface for efficient filtering

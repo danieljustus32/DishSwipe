@@ -45,6 +45,7 @@ export interface IStorage {
   getUserPreferences(userId: string): Promise<UserPreference[]>;
   saveUserPreference(preference: InsertUserPreference): Promise<UserPreference>;
   getUserPreference(userId: string, spoonacularId: number): Promise<UserPreference | undefined>;
+  getUserRatedSpoonacularIds(userId: string): Promise<number[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -192,6 +193,14 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(userPreferences)
       .where(eq(userPreferences.userId, userId));
+  }
+
+  async getUserRatedSpoonacularIds(userId: string): Promise<number[]> {
+    const preferences = await db
+      .select({ spoonacularId: userPreferences.spoonacularId })
+      .from(userPreferences)
+      .where(eq(userPreferences.userId, userId));
+    return preferences.map(p => p.spoonacularId);
   }
 
   async saveUserPreference(preference: InsertUserPreference): Promise<UserPreference> {

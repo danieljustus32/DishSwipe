@@ -249,6 +249,7 @@ export default function CookbookView() {
         <RecipeModal
           recipe={selectedRecipe}
           onClose={() => setSelectedRecipe(null)}
+          isFromCookbook={true}
         />
       )}
     </div>

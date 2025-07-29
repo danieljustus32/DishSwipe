@@ -40,9 +40,10 @@ interface Recipe {
 interface RecipeModalProps {
   recipe: Recipe;
   onClose: () => void;
+  isFromCookbook?: boolean;
 }
 
-export default function RecipeModal({ recipe, onClose }: RecipeModalProps) {
+export default function RecipeModal({ recipe, onClose, isFromCookbook = false }: RecipeModalProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isSaving, setIsSaving] = useState(false);
@@ -60,18 +61,24 @@ export default function RecipeModal({ recipe, onClose }: RecipeModalProps) {
         }),
       });
 
-      if (!response.ok) {
+      if (response.ok) {
+        // Invalidate cookbook cache to ensure fresh data
+        queryClient.invalidateQueries({ queryKey: ["/api/cookbook"] });
+
+        toast({
+          title: "Recipe Saved!",
+          description: `${recipe.title} added to your cookbook`,
+          duration: 1000,
+        });
+      } else if (response.status === 409) {
+        // Recipe already saved
+        toast({
+          title: "Already Saved!",
+          description: `${recipe.title} is already in your cookbook`,
+        });
+      } else {
         throw new Error(`${response.status}: ${response.statusText}`);
       }
-
-      // Invalidate cookbook cache to ensure fresh data
-      queryClient.invalidateQueries({ queryKey: ["/api/cookbook"] });
-
-      toast({
-        title: "Recipe Saved!",
-        description: `${recipe.title} added to your cookbook`,
-        duration: 1000,
-      });
     } catch (error) {
       if (isUnauthorizedError(error as Error)) {
         toast({
@@ -273,17 +280,19 @@ export default function RecipeModal({ recipe, onClose }: RecipeModalProps) {
         {/* Action Buttons */}
         <div className="p-4 border-t border-border space-y-3">
           <div className="flex space-x-3">
-            <Button
-              onClick={handleSaveRecipe}
-              disabled={isSaving}
-              className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold"
-            >
-              {isSaving ? "Saving..." : "Save to Cookbook"}
-            </Button>
+            {!isFromCookbook && (
+              <Button
+                onClick={handleSaveRecipe}
+                disabled={isSaving}
+                className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold"
+              >
+                {isSaving ? "Saving..." : "Save to Cookbook"}
+              </Button>
+            )}
             <Button
               onClick={handleAddToShoppingList}
               disabled={isAddingToShoppingList}
-              className="flex-1 bg-secondary hover:bg-secondary/90 text-secondary-foreground font-semibold"
+              className={`${isFromCookbook ? 'w-full' : 'flex-1'} bg-secondary hover:bg-secondary/90 text-secondary-foreground font-semibold`}
             >
               {isAddingToShoppingList ? "Adding..." : "Add to Shopping List"}
             </Button>

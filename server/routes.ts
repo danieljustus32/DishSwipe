@@ -141,22 +141,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const offset = parseInt(req.query.offset as string) || 0;
       const number = parseInt(req.query.number as string) || 10;
 
-      const spoonacularRecipes = await fetchSpoonacularRecipes(offset, number);
-      const recipes = [];
+      // Get user's already rated recipe IDs to filter them out
+      const ratedSpoonacularIds = await storage.getUserRatedSpoonacularIds(userId);
 
-      for (const spoonacularRecipe of spoonacularRecipes) {
-        const transformedRecipe = transformSpoonacularRecipe(spoonacularRecipe);
-        const savedRecipe = await storage.createRecipe(transformedRecipe);
+      let recipes = [];
+      let attempts = 0;
+      const maxAttempts = 5; // Prevent infinite loops
+
+      // Keep fetching recipes until we have enough unrated ones or hit max attempts
+      while (recipes.length < number && attempts < maxAttempts) {
+        const fetchNumber = Math.max(number * 2, 20); // Fetch more to account for filtering
+        const spoonacularRecipes = await fetchSpoonacularRecipes(offset + (attempts * fetchNumber), fetchNumber);
         
-        // Check if user has already rated this recipe
-        const preference = await storage.getUserPreference(userId, spoonacularRecipe.id);
-        const isSaved = await storage.isRecipeSaved(userId, savedRecipe.id);
+        if (spoonacularRecipes.length === 0) break; // No more recipes available
+
+        for (const spoonacularRecipe of spoonacularRecipes) {
+          // Skip if user has already rated this recipe
+          if (ratedSpoonacularIds.includes(spoonacularRecipe.id)) {
+            continue;
+          }
+
+          const transformedRecipe = transformSpoonacularRecipe(spoonacularRecipe);
+          const savedRecipe = await storage.createRecipe(transformedRecipe);
+          const isSaved = await storage.isRecipeSaved(userId, savedRecipe.id);
+          
+          recipes.push({
+            ...savedRecipe,
+            isSaved,
+          });
+
+          // Stop if we have enough recipes
+          if (recipes.length >= number) break;
+        }
         
-        recipes.push({
-          ...savedRecipe,
-          userPreference: preference?.liked,
-          isSaved,
-        });
+        attempts++;
       }
 
       res.json(recipes);
@@ -228,6 +246,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...req.body,
         userId,
       });
+
+      // Check if recipe is already saved to prevent duplicates
+      const isAlreadySaved = await storage.isRecipeSaved(userId, userRecipeData.recipeId);
+      if (isAlreadySaved) {
+        return res.status(409).json({ message: "Recipe already saved to cookbook" });
+      }
 
       const userRecipe = await storage.saveUserRecipe(userRecipeData);
       res.json(userRecipe);
