@@ -217,7 +217,7 @@ export default function CookbookView() {
                       <span>{userRecipe.recipe.readyInMinutes} min</span> • 
                       <span> {userRecipe.recipe.servings} servings</span>
                     </div>
-                    <div className="flex items-center space-x-2 mb-[10px]">
+                    <div className="flex items-center space-x-2 -mt-1">
                       <Button
                         size="sm"
                         variant="ghost"
