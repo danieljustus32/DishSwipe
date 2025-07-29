@@ -91,13 +91,35 @@
   }
 
   /* Remove focus states from action buttons */
-  .action-button:focus {
+  .action-button {
+    -webkit-tap-highlight-color: transparent !important;
+    -webkit-touch-callout: none !important;
+    -webkit-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
+    user-select: none !important;
+    outline: none !important;
+    border: none !important;
+  }
+  
+  .action-button:focus,
+  .action-button:active,
+  .action-button:hover {
     outline: none !important;
     box-shadow: none !important;
+    -webkit-tap-highlight-color: transparent !important;
   }
   
   .action-button:focus-visible {
     outline: none !important;
     box-shadow: none !important;
+  }
+  
+  /* Reset button focus state on touch devices */
+  @media (hover: none) and (pointer: coarse) {
+    .action-button:focus {
+      background-color: transparent !important;
+      color: inherit !important;
+    }
   }
 }

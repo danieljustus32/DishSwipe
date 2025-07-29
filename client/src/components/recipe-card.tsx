@@ -36,13 +36,32 @@ export default function RecipeCard({ recipe, onSwipe, onInfoClick }: RecipeCardP
 
   // Clear button focus when recipe changes
   useEffect(() => {
-    if (dislikeButtonRef.current) {
-      dislikeButtonRef.current.blur();
-    }
-    if (likeButtonRef.current) {
-      likeButtonRef.current.blur();
-    }
+    const clearFocus = () => {
+      if (dislikeButtonRef.current) {
+        dislikeButtonRef.current.blur();
+      }
+      if (likeButtonRef.current) {
+        likeButtonRef.current.blur();
+      }
+      // Also remove focus from any currently focused element
+      if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur();
+      }
+    };
+    
+    // Delay the blur to ensure it happens after any focus events
+    setTimeout(clearFocus, 100);
   }, [recipe.id]);
+
+  const handleSwipe = (direction: "left" | "right") => {
+    // Immediately blur the clicked button
+    setTimeout(() => {
+      if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur();
+      }
+    }, 50);
+    onSwipe(direction);
+  };
 
   const handleMouseDown = (e: React.MouseEvent) => {
     setIsDragging(true);
@@ -159,7 +178,7 @@ export default function RecipeCard({ recipe, onSwipe, onInfoClick }: RecipeCardP
           size="lg"
           variant="outline"
           className="action-button w-16 h-16 rounded-full border-2 border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground focus:outline-none focus:ring-0 focus:bg-destructive focus:text-destructive-foreground active:scale-95"
-          onClick={() => onSwipe("left")}
+          onClick={() => handleSwipe("left")}
         >
           <X className="w-8 h-8" />
         </Button>
@@ -168,7 +187,7 @@ export default function RecipeCard({ recipe, onSwipe, onInfoClick }: RecipeCardP
           size="lg"
           variant="outline"
           className="action-button w-16 h-16 rounded-full border-2 border-green-400 text-green-400 hover:bg-green-400 hover:text-white bg-white focus:outline-none focus:ring-0 focus:bg-green-400 focus:text-white active:scale-95"
-          onClick={() => onSwipe("right")}
+          onClick={() => handleSwipe("right")}
         >
           <Heart className="w-8 h-8" />
         </Button>
