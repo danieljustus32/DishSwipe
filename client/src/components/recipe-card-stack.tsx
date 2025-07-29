@@ -113,7 +113,12 @@ function SwipeableCard({
       transform,
       opacity: cardOpacity,
       zIndex: 10 - cardDepth,
-      transition: isAnimating || !isTopCard ? 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)' : isDragging ? 'none' : 'transform 0.2s ease-out',
+      // Exclude opacity from transitions to ensure immediate opacity changes
+      transition: isTopCard 
+        ? (isDragging ? 'none' : 'transform 0.2s ease-out')
+        : isAnimating 
+          ? 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), z-index 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+          : 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
       pointerEvents: isTopCard ? 'auto' as const : 'none' as const
     };
   };
