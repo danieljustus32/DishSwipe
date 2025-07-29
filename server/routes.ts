@@ -1,5 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import Stripe from "stripe";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { 
@@ -10,6 +11,14 @@ import {
 } from "@shared/schema";
 import { z } from "zod";
 import { mockRecipes, getRandomMockRecipes } from "./mockRecipes";
+
+// Stripe configuration
+let stripe: Stripe | null = null;
+if (process.env.STRIPE_SECRET_KEY) {
+  stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+    apiVersion: "2025-06-30.basil",
+  });
+}
 
 // Spoonacular API configuration
 const SPOONACULAR_API_KEY = process.env.SPOONACULAR_API_KEY || process.env.VITE_SPOONACULAR_API_KEY || "";
@@ -216,13 +225,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/preferences', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Check daily usage limits for non-Gold users
+      if (!user.isGoldMember) {
+        const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+        const remainingLikes = await storage.getRemainingLikes(userId, today);
+        
+        if (remainingLikes <= 0) {
+          return res.status(429).json({ 
+            message: "Daily like limit reached",
+            remainingLikes: 0,
+            isGoldMember: false
+          });
+        }
+        
+        // If this is a like (not dislike), increment the usage counter
+        if (req.body.liked === true) {
+          await storage.incrementDailyLikes(userId, today);
+        }
+      }
+
       const preferenceData = insertUserPreferenceSchema.parse({
         ...req.body,
         userId,
       });
 
       const preference = await storage.saveUserPreference(preferenceData);
-      res.json(preference);
+      
+      // Include remaining likes in response for non-Gold users
+      const responseData: any = preference;
+      if (!user.isGoldMember) {
+        const today = new Date().toISOString().split('T')[0];
+        responseData.remainingLikes = await storage.getRemainingLikes(userId, today);
+        responseData.isGoldMember = false;
+      }
+      
+      res.json(responseData);
     } catch (error) {
       console.error("Error saving preference:", error);
       res.status(500).json({ message: "Failed to save preference" });
@@ -376,6 +419,129 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Error clearing shopping list:", error);
       res.status(500).json({ message: "Failed to clear shopping list" });
     }
+  });
+
+  // User status and profile routes
+  app.get('/api/user/status', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const today = new Date().toISOString().split('T')[0];
+      const remainingLikes = user.isGoldMember ? -1 : await storage.getRemainingLikes(userId, today); // -1 indicates unlimited
+
+      res.json({
+        isGoldMember: user.isGoldMember || false,
+        remainingLikes,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+      });
+    } catch (error) {
+      console.error("Error fetching user status:", error);
+      res.status(500).json({ message: "Failed to fetch user status" });
+    }
+  });
+
+  // Stripe subscription routes
+  app.post('/api/create-subscription', isAuthenticated, async (req: any, res) => {
+    try {
+      if (!stripe) {
+        return res.status(503).json({ message: "Payment processing not available. Please contact support." });
+      }
+
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Check if user already has an active subscription
+      if (user.stripeSubscriptionId) {
+        const subscription = await stripe.subscriptions.retrieve(user.stripeSubscriptionId);
+        
+        if (subscription.status === 'active') {
+          return res.json({
+            subscriptionId: subscription.id,
+            status: 'active'
+          });
+        }
+      }
+
+      if (!user.email) {
+        return res.status(400).json({ message: "User email required for subscription" });
+      }
+
+      // Create or update Stripe customer
+      let customer;
+      if (user.stripeCustomerId) {
+        customer = await stripe.customers.retrieve(user.stripeCustomerId);
+      } else {
+        customer = await stripe.customers.create({
+          email: user.email,
+          name: user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.email,
+        });
+        await storage.updateUserStripeInfo(userId, customer.id);
+      }
+
+      // Create a simple subscription for FlavorSwipe Gold ($9.99/month)
+      // First create a product and price
+      const product = await stripe.products.create({
+        name: 'FlavorSwipe Gold',
+        description: 'Unlimited recipe likes and premium features',
+      });
+
+      const price = await stripe.prices.create({
+        currency: 'usd',
+        unit_amount: 999, // $9.99 in cents
+        recurring: {
+          interval: 'month',
+        },
+        product: product.id,
+      });
+
+      const subscription = await stripe.subscriptions.create({
+        customer: customer.id,
+        items: [{ price: price.id }],
+        payment_behavior: 'default_incomplete',
+        payment_settings: {
+          save_default_payment_method: 'on_subscription',
+        },
+        expand: ['latest_invoice.payment_intent'],
+      });
+
+      // Update user with subscription info
+      await storage.updateUserStripeInfo(userId, customer.id, subscription.id);
+
+      const latestInvoice = subscription.latest_invoice;
+      let clientSecret = null;
+      
+      if (typeof latestInvoice === 'object' && latestInvoice && 'payment_intent' in latestInvoice) {
+        const paymentIntent = latestInvoice.payment_intent;
+        if (typeof paymentIntent === 'object' && paymentIntent && 'client_secret' in paymentIntent) {
+          clientSecret = paymentIntent.client_secret;
+        }
+      }
+
+      res.json({
+        subscriptionId: subscription.id,
+        clientSecret,
+      });
+    } catch (error: any) {
+      console.error("Error creating subscription:", error);
+      res.status(400).json({ error: { message: error.message } });
+    }
+  });
+
+  // Simple webhook endpoint for Stripe events (for future use)
+  app.post('/api/webhook/stripe', async (req, res) => {
+    // TODO: Implement proper webhook handling when needed
+    res.json({ received: true });
   });
 
   const httpServer = createServer(app);

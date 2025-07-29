@@ -4,6 +4,7 @@ import {
   userRecipes,
   shoppingListItems,
   userPreferences,
+  dailyUsage,
   type User,
   type UpsertUser,
   type Recipe,
@@ -14,6 +15,8 @@ import {
   type InsertShoppingListItem,
   type UserPreference,
   type InsertUserPreference,
+  type DailyUsage,
+  type InsertDailyUsage,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, inArray } from "drizzle-orm";
@@ -46,6 +49,15 @@ export interface IStorage {
   saveUserPreference(preference: InsertUserPreference): Promise<UserPreference>;
   getUserPreference(userId: string, spoonacularId: number): Promise<UserPreference | undefined>;
   getUserRatedSpoonacularIds(userId: string): Promise<number[]>;
+  
+  // Subscription operations
+  updateUserStripeInfo(userId: string, customerId: string, subscriptionId?: string): Promise<User>;
+  updateUserGoldStatus(userId: string, isGold: boolean): Promise<User>;
+  
+  // Daily usage operations
+  getDailyUsage(userId: string, date: string): Promise<DailyUsage | undefined>;
+  incrementDailyLikes(userId: string, date: string): Promise<DailyUsage>;
+  getRemainingLikes(userId: string, date: string): Promise<number>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -271,6 +283,79 @@ export class DatabaseStorage implements IStorage {
       .from(userPreferences)
       .where(and(eq(userPreferences.userId, userId), eq(userPreferences.spoonacularId, spoonacularId)));
     return preference;
+  }
+
+  // Subscription operations
+  async updateUserStripeInfo(userId: string, customerId: string, subscriptionId?: string): Promise<User> {
+    const updateData: Partial<User> = {
+      stripeCustomerId: customerId,
+      updatedAt: new Date(),
+    };
+    
+    if (subscriptionId) {
+      updateData.stripeSubscriptionId = subscriptionId;
+      updateData.isGoldMember = true;
+    }
+
+    const [updatedUser] = await db
+      .update(users)
+      .set(updateData)
+      .where(eq(users.id, userId))
+      .returning();
+    return updatedUser;
+  }
+
+  async updateUserGoldStatus(userId: string, isGold: boolean): Promise<User> {
+    const [updatedUser] = await db
+      .update(users)
+      .set({ 
+        isGoldMember: isGold,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, userId))
+      .returning();
+    return updatedUser;
+  }
+
+  // Daily usage operations
+  async getDailyUsage(userId: string, date: string): Promise<DailyUsage | undefined> {
+    const [usage] = await db
+      .select()
+      .from(dailyUsage)
+      .where(and(eq(dailyUsage.userId, userId), eq(dailyUsage.date, date)));
+    return usage;
+  }
+
+  async incrementDailyLikes(userId: string, date: string): Promise<DailyUsage> {
+    const existing = await this.getDailyUsage(userId, date);
+    
+    if (existing) {
+      const [updated] = await db
+        .update(dailyUsage)
+        .set({ 
+          likesCount: existing.likesCount + 1,
+          updatedAt: new Date(),
+        })
+        .where(eq(dailyUsage.id, existing.id))
+        .returning();
+      return updated;
+    } else {
+      const [newUsage] = await db
+        .insert(dailyUsage)
+        .values({
+          userId,
+          date,
+          likesCount: 1,
+        })
+        .returning();
+      return newUsage;
+    }
+  }
+
+  async getRemainingLikes(userId: string, date: string): Promise<number> {
+    const usage = await this.getDailyUsage(userId, date);
+    const DAILY_LIMIT = 50;
+    return Math.max(0, DAILY_LIMIT - (usage?.likesCount || 0));
   }
 }
 

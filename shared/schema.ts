@@ -31,6 +31,9 @@ export const users = pgTable("users", {
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
+  stripeCustomerId: varchar("stripe_customer_id"),
+  stripeSubscriptionId: varchar("stripe_subscription_id"),
+  isGoldMember: boolean("is_gold_member").default(false),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -97,11 +100,24 @@ export const userPreferences = pgTable("user_preferences", {
   index("idx_user_preferences_unique").on(table.userId, table.spoonacularId),
 ]);
 
+// Daily usage tracking for rate limiting
+export const dailyUsage = pgTable("daily_usage", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  date: varchar("date").notNull(), // YYYY-MM-DD format
+  likesCount: integer("likes_count").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_daily_usage_unique").on(table.userId, table.date),
+]);
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   userRecipes: many(userRecipes),
   shoppingListItems: many(shoppingListItems),
   preferences: many(userPreferences),
+  dailyUsage: many(dailyUsage),
 }));
 
 export const recipesRelations = relations(recipes, ({ many }) => ({
@@ -138,6 +154,13 @@ export const userPreferencesRelations = relations(userPreferences, ({ one }) => 
   }),
 }));
 
+export const dailyUsageRelations = relations(dailyUsage, ({ one }) => ({
+  user: one(users, {
+    fields: [dailyUsage.userId],
+    references: [users.id],
+  }),
+}));
+
 // Insert schemas
 export const insertRecipeSchema = createInsertSchema(recipes).omit({
   id: true,
@@ -159,6 +182,12 @@ export const insertUserPreferenceSchema = createInsertSchema(userPreferences).om
   createdAt: true,
 });
 
+export const insertDailyUsageSchema = createInsertSchema(dailyUsage).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Types
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
@@ -170,3 +199,5 @@ export type ShoppingListItem = typeof shoppingListItems.$inferSelect;
 export type InsertShoppingListItem = z.infer<typeof insertShoppingListItemSchema>;
 export type UserPreference = typeof userPreferences.$inferSelect;
 export type InsertUserPreference = z.infer<typeof insertUserPreferenceSchema>;
+export type DailyUsage = typeof dailyUsage.$inferSelect;
+export type InsertDailyUsage = z.infer<typeof insertDailyUsageSchema>;

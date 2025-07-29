@@ -1,15 +1,17 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Search, Heart, ShoppingCart } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { Search, Heart, ShoppingCart, User, Crown } from "lucide-react";
 import RecipeCardStack from "@/components/recipe-card-stack";
 import RecipeModal from "@/components/recipe-modal";
 import CookbookView from "@/components/cookbook-view";
 import ShoppingView from "@/components/shopping-view";
 import { isUnauthorizedError } from "@/lib/authUtils";
+import { Link } from "wouter";
 
 type ViewType = "discover" | "cookbook" | "shopping";
 
@@ -44,6 +46,14 @@ interface Recipe {
   isSaved?: boolean;
 }
 
+interface UserStatus {
+  isGoldMember: boolean;
+  remainingLikes: number;
+  email: string;
+  firstName?: string;
+  lastName?: string;
+}
+
 export default function Home() {
   const { user, isLoading } = useAuth();
   const { toast } = useToast();
@@ -53,6 +63,13 @@ export default function Home() {
   const [currentRecipeIndex, setCurrentRecipeIndex] = useState(0);
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   const [isLoadingRecipes, setIsLoadingRecipes] = useState(false);
+
+  // Fetch user status for usage tracking
+  const { data: userStatus } = useQuery<UserStatus>({
+    queryKey: ['/api/user/status'],
+    retry: false,
+    enabled: !!user,
+  });
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -126,9 +143,9 @@ export default function Home() {
     const currentRecipe = recipes[currentRecipeIndex];
     if (!currentRecipe) return;
 
-    // Save user preference
+    // Save user preference and check for usage limits
     try {
-      await fetch("/api/preferences", {
+      const preferenceResponse = await fetch("/api/preferences", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -137,6 +154,23 @@ export default function Home() {
           liked: direction === "right",
         }),
       });
+
+      if (preferenceResponse.status === 429) {
+        // Daily limit reached
+        const data = await preferenceResponse.json();
+        toast({
+          title: "Daily Limit Reached",
+          description: "You've reached your daily limit of 50 likes. Upgrade to FlavorSwipe Gold for unlimited likes!",
+          variant: "destructive",
+          duration: 5000,
+        });
+        return; // Don't proceed with the swipe
+      }
+
+      if (preferenceResponse.ok) {
+        // Update user status to reflect new usage
+        queryClient.invalidateQueries({ queryKey: ['/api/user/status'] });
+      }
 
       // If liked, save to cookbook
       if (direction === "right") {
@@ -200,24 +234,57 @@ export default function Home() {
     <div className="min-h-screen bg-accent">
       <div className="max-w-md mx-auto bg-white shadow-xl min-h-screen relative overflow-hidden">
         {/* Header */}
-        <header className="bg-primary text-primary-foreground p-4 flex justify-between items-center">
-          <h1 className="text-xl font-bold">FlavorSwipe</h1>
-          <div className="flex items-center space-x-4">
-            <Avatar className="w-8 h-8">
-              <AvatarImage src={(user as any)?.profileImageUrl || undefined} />
-              <AvatarFallback className="bg-white text-primary">
-                {(user as any)?.firstName?.charAt(0) || (user as any)?.email?.charAt(0) || "U"}
-              </AvatarFallback>
-            </Avatar>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={handleLogout}
-              className="text-primary-foreground hover:bg-primary-foreground/10"
-            >
-              Logout
-            </Button>
+        <header className="bg-primary text-primary-foreground p-4">
+          <div className="flex justify-between items-center">
+            <h1 className="text-xl font-bold flex items-center gap-2">
+              FlavorSwipe
+              {userStatus?.isGoldMember && (
+                <Crown className="w-5 h-5 text-yellow-400" />
+              )}
+            </h1>
+            <div className="flex items-center space-x-2">
+              <Link href="/profile">
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  className="text-primary-foreground hover:bg-primary-foreground/10"
+                >
+                  <User className="w-4 h-4" />
+                </Button>
+              </Link>
+              <Avatar className="w-8 h-8">
+                <AvatarImage src={(user as any)?.profileImageUrl || undefined} />
+                <AvatarFallback className="bg-white text-primary">
+                  {(user as any)?.firstName?.charAt(0) || (user as any)?.email?.charAt(0) || "U"}
+                </AvatarFallback>
+              </Avatar>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={handleLogout}
+                className="text-primary-foreground hover:bg-primary-foreground/10"
+              >
+                Logout
+              </Button>
+            </div>
           </div>
+          
+          {/* Usage Progress Bar for non-Gold users */}
+          {userStatus && !userStatus.isGoldMember && (
+            <div className="mt-3 space-y-1">
+              <div className="flex justify-between text-xs">
+                <span>Daily Likes</span>
+                <span>{50 - userStatus.remainingLikes} / 50</span>
+              </div>
+              <Progress 
+                value={((50 - userStatus.remainingLikes) / 50) * 100} 
+                className="h-1"
+              />
+              <div className="text-xs text-primary-foreground/80">
+                {userStatus.remainingLikes} likes remaining today
+              </div>
+            </div>
+          )}
         </header>
 
         {/* Navigation Tabs */}
