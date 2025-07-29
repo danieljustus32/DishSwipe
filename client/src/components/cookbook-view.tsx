@@ -180,7 +180,7 @@ export default function CookbookView() {
           </div>
         </div>
       ) : (
-        <ScrollArea className="h-[calc(100vh-140px)]">
+        <ScrollArea className="h-full pb-20">
           <div className="space-y-4">
             {userRecipes.map((userRecipe) => (
               <div
