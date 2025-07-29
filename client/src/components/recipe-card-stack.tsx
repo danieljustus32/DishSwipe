@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Clock, Users, Info, X, Heart } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import RecipePlaceholder from "./recipe-placeholder";
 
 interface Recipe {
   id: string;
@@ -190,12 +191,19 @@ function SwipeableCard({
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
-      <img
-        src={recipe.image || "/api/placeholder/400/300"}
-        alt={recipe.title}
-        className="w-full h-64 object-cover"
-        draggable={false}
-      />
+      {recipe.image ? (
+        <img
+          src={recipe.image}
+          alt={recipe.title}
+          className="w-full h-64 object-cover"
+          draggable={false}
+        />
+      ) : (
+        <RecipePlaceholder 
+          className="w-full h-64" 
+          title={recipe.title}
+        />
+      )}
       
       {/* Content Section */}
       <div className="flex-1 bg-white dark:bg-gray-800 p-6 flex flex-col justify-start">

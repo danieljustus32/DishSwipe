@@ -6,6 +6,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { X, Clock, Users, ChefHat, Plus } from "lucide-react";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import NutritionChart from "@/components/nutrition-chart";
+import RecipePlaceholder from "./recipe-placeholder";
 
 interface Recipe {
   id: string;
@@ -184,11 +185,18 @@ export default function RecipeModal({ recipe, onClose }: RecipeModalProps) {
         <div className="flex-1 overflow-y-auto">
           <div className="p-4 space-y-6">
             {/* Recipe Image */}
-            <img
-              src={recipe.image || "/api/placeholder/400/200"}
-              alt={recipe.title}
-              className="w-full h-48 object-cover rounded-xl"
-            />
+            {recipe.image ? (
+              <img
+                src={recipe.image}
+                alt={recipe.title}
+                className="w-full h-48 object-cover rounded-xl"
+              />
+            ) : (
+              <RecipePlaceholder 
+                className="w-full h-48 rounded-xl" 
+                title={recipe.title}
+              />
+            )}
 
             {/* Recipe Info */}
             <div className="flex items-center space-x-6 text-sm text-muted-foreground">

@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { Eye, Plus, Trash2 } from "lucide-react";
 import RecipeModal from "./recipe-modal";
+import RecipePlaceholder from "./recipe-placeholder";
 
 interface Recipe {
   id: string;
@@ -187,11 +188,17 @@ export default function CookbookView() {
                 className="bg-white rounded-xl shadow-sm border border-border overflow-hidden"
               >
                 <div className="flex">
-                  <img
-                    src={userRecipe.recipe.image || "/api/placeholder/120/120"}
-                    alt={userRecipe.recipe.title}
-                    className="w-20 h-20 object-cover flex-shrink-0"
-                  />
+                  {userRecipe.recipe.image ? (
+                    <img
+                      src={userRecipe.recipe.image}
+                      alt={userRecipe.recipe.title}
+                      className="w-20 h-20 object-cover flex-shrink-0"
+                    />
+                  ) : (
+                    <RecipePlaceholder 
+                      className="w-20 h-20 flex-shrink-0" 
+                    />
+                  )}
                   <div className="flex-1 p-4 min-w-0">
                     <h3 className="font-bold text-foreground mb-1 truncate">
                       {userRecipe.recipe.title}
