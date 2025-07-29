@@ -210,7 +210,7 @@ export default function CookbookView() {
                     }}
                   />
                   <div className="flex-1 p-4 min-w-0 flex flex-col justify-between">
-                    <h3 className="font-bold text-foreground mb-1 line-clamp-2 leading-tight">
+                    <h3 className="font-bold text-foreground mb-1 overflow-hidden text-ellipsis whitespace-nowrap">
                       {userRecipe.recipe.title}
                     </h3>
                     <div className="text-sm text-muted-foreground mb-2">
