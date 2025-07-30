@@ -128,6 +128,24 @@
     background: linear-gradient(180deg, transparent 0%, rgba(45, 52, 54, 0.8) 100%);
   }
 
+  /* Tutorial highlight classes */
+  .tutorial-highlight {
+    position: relative;
+    z-index: 1001;
+    pointer-events: auto;
+  }
+
+  .tutorial-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    pointer-events: none;
+  }
+
   .card-swipe {
     transition: transform 0.3s ease-out, opacity 0.3s ease-out;
   }

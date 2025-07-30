@@ -12,6 +12,8 @@ import CookbookView from "@/components/cookbook-view";
 import ShoppingView from "@/components/shopping-view";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { Link } from "wouter";
+import { useOnboarding } from "@/hooks/useOnboarding";
+import OnboardingTutorial from "@/components/OnboardingTutorial";
 
 type ViewType = "discover" | "cookbook" | "shopping";
 
@@ -63,6 +65,15 @@ export default function Home() {
   const [currentRecipeIndex, setCurrentRecipeIndex] = useState(0);
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   const [isLoadingRecipes, setIsLoadingRecipes] = useState(false);
+  
+  // Onboarding tutorial
+  const { 
+    currentTutorial, 
+    currentStep, 
+    skipTutorial, 
+    nextStep, 
+    isTutorialActive 
+  } = useOnboarding();
 
   // Fetch user status for usage tracking
   const { data: userStatus } = useQuery<UserStatus>({
@@ -308,6 +319,7 @@ export default function Home() {
             </button>
             <button
               onClick={() => setCurrentView("cookbook")}
+              data-tutorial="cookbook-tab"
               className={`flex-1 py-3 px-4 font-medium ${
                 currentView === "cookbook"
                   ? "text-primary border-b-2 border-primary"
@@ -321,6 +333,7 @@ export default function Home() {
             </button>
             <button
               onClick={() => setCurrentView("shopping")}
+              data-tutorial="shopping-tab"
               className={`flex-1 py-3 px-4 font-medium ${
                 currentView === "shopping"
                   ? "text-primary border-b-2 border-primary"
@@ -358,6 +371,16 @@ export default function Home() {
           <RecipeModal
             recipe={selectedRecipe}
             onClose={() => setSelectedRecipe(null)}
+          />
+        )}
+
+        {/* Onboarding Tutorial */}
+        {isTutorialActive && (
+          <OnboardingTutorial
+            tutorial={currentTutorial}
+            step={currentStep}
+            onSkip={skipTutorial}
+            onNext={nextStep}
           />
         )}
       </div>

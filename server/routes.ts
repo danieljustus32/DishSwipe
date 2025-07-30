@@ -12,6 +12,7 @@ import {
 } from "@shared/schema";
 import { z } from "zod";
 import { mockRecipes, getRandomMockRecipes } from "./mockRecipes";
+import { mockCookbookRecipes, mockShoppingListItems } from "./mockTutorialData";
 
 // Stripe configuration
 let stripe: Stripe | null = null;
@@ -603,6 +604,86 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error("Error cancelling subscription:", error);
       res.status(400).json({ error: { message: error.message } });
+    }
+  });
+
+  // Tutorial endpoints for onboarding
+  app.post('/api/tutorial/load-cookbook-data', isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user!.claims.sub;
+      
+      // Add mock cookbook recipes for tutorial
+      for (const recipe of mockCookbookRecipes) {
+        await storage.createRecipe({
+          spoonacularId: recipe.spoonacularId,
+          title: recipe.title,
+          image: recipe.image,
+          readyInMinutes: recipe.readyInMinutes,
+          servings: recipe.servings,
+          summary: recipe.summary,
+          instructions: recipe.instructions,
+          ingredients: recipe.ingredients,
+          nutrition: recipe.nutrition,
+        });
+        
+        await storage.saveUserRecipe({
+          userId,
+          recipeId: recipe.id,
+        });
+      }
+      
+      res.json({ message: "Tutorial cookbook data loaded" });
+    } catch (error: any) {
+      console.error("Error loading tutorial cookbook data:", error);
+      res.status(500).json({ error: { message: error.message } });
+    }
+  });
+
+  app.post('/api/tutorial/load-shopping-data', isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user!.claims.sub;
+      
+      // Add mock shopping list items for tutorial
+      for (const item of mockShoppingListItems) {
+        await storage.addShoppingListItem({
+          userId,
+          name: item.name,
+          amount: item.amount,
+          aisle: item.aisle,
+          checked: item.checked,
+          recipeId: item.recipeId,
+        });
+      }
+      
+      res.json({ message: "Tutorial shopping data loaded" });
+    } catch (error: any) {
+      console.error("Error loading tutorial shopping data:", error);
+      res.status(500).json({ error: { message: error.message } });
+    }
+  });
+
+  app.delete('/api/tutorial/cleanup', isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user!.claims.sub;
+      
+      // Remove tutorial cookbook recipes
+      for (const recipe of mockCookbookRecipes) {
+        await storage.removeUserRecipe(userId, recipe.id);
+        // Note: We don't delete the recipe itself as it might be used by other users
+      }
+      
+      // Remove tutorial shopping list items
+      const shoppingItems = await storage.getShoppingList(userId);
+      for (const item of shoppingItems) {
+        if (mockShoppingListItems.some(mock => mock.name === item.name && mock.aisle === item.aisle)) {
+          await storage.removeShoppingListItem(item.id);
+        }
+      }
+      
+      res.json({ message: "Tutorial data cleaned up" });
+    } catch (error: any) {
+      console.error("Error cleaning up tutorial data:", error);
+      res.status(500).json({ error: { message: error.message } });
     }
   });
 
