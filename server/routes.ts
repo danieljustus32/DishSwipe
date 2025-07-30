@@ -610,7 +610,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Tutorial endpoints for onboarding
   app.post('/api/tutorial/load-cookbook-data', isAuthenticated, async (req, res) => {
     try {
-      const userId = req.user!.claims.sub;
+      const userId = req.user!.id;
       
       // Add mock cookbook recipes for tutorial
       for (const recipe of mockCookbookRecipes) {
@@ -641,7 +641,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/tutorial/load-shopping-data', isAuthenticated, async (req, res) => {
     try {
-      const userId = req.user!.claims.sub;
+      const userId = req.user!.id;
       
       // Add mock shopping list items for tutorial
       for (const item of mockShoppingListItems) {
@@ -664,7 +664,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete('/api/tutorial/cleanup', isAuthenticated, async (req, res) => {
     try {
-      const userId = req.user!.claims.sub;
+      const userId = req.user!.id;
       
       // Remove tutorial cookbook recipes
       for (const recipe of mockCookbookRecipes) {

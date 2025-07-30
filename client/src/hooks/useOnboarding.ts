@@ -1,84 +1,69 @@
-import { useState, useEffect } from "react";
-import { useAuth } from "./useAuth";
-
-export type TutorialType = "welcome" | "cookbook" | "shopping";
+import { useState, useEffect } from 'react';
+import { useAuth } from './useAuth';
 
 export interface TutorialStep {
   id: string;
   title: string;
   description: string;
-  targetElement?: string;
-  action?: () => Promise<void>;
+  targetElement: string;
 }
 
 export interface Tutorial {
-  type: TutorialType;
+  id: string;
   steps: TutorialStep[];
 }
 
-const TUTORIALS: Record<TutorialType, Tutorial> = {
+export type TutorialType = 'welcome' | 'cookbook' | 'shopping';
+
+const tutorials: Record<TutorialType, Tutorial> = {
   welcome: {
-    type: "welcome",
+    id: 'welcome',
     steps: [
       {
-        id: "welcome-1",
-        title: "Welcome to FlavorSwipe!",
-        description: "Discover amazing recipes by swiping right to like and left to pass. Let's take a quick tour!"
+        id: 'welcome-step-1',
+        title: 'Welcome to FlavorSwipe!',
+        description: 'Discover amazing recipes by swiping right to save or left to skip. Let\'s explore the app together!',
+        targetElement: '[data-tutorial="recipe-stack"]'
       },
       {
-        id: "welcome-2", 
-        title: "Explore Your Cookbook",
-        description: "Click on the Cookbook tab to see your saved recipes. We'll add some sample recipes for you to explore!",
-        targetElement: "[data-tutorial='cookbook-tab']",
-        action: async () => {
-          await fetch('/api/tutorial/load-cookbook-data', { 
-            method: 'POST',
-            credentials: 'include'
-          });
-        }
+        id: 'welcome-step-2', 
+        title: 'Swipe to Discover',
+        description: 'Swipe right ❤️ to save recipes to your cookbook, or swipe left ✖️ to skip. You can also use the buttons below.',
+        targetElement: '[data-tutorial="swipe-buttons"]'
       }
     ]
   },
   cookbook: {
-    type: "cookbook",
+    id: 'cookbook',
     steps: [
       {
-        id: "cookbook-1",
-        title: "Your Recipe Collection",
-        description: "Here are your saved recipes! You can view details, add ingredients to shopping list, or remove recipes you no longer want."
+        id: 'cookbook-step-1',
+        title: 'Your Recipe Cookbook',
+        description: 'Welcome to your cookbook! Here are your saved recipes. Click on any recipe to view the full details, ingredients, and cooking instructions.',
+        targetElement: '[data-tutorial="cookbook-content"]'
       },
       {
-        id: "cookbook-2",
-        title: "Try the Shopping List",
-        description: "Click on Shopping to see how you can organize ingredients by grocery store aisle!",
-        targetElement: "[data-tutorial='shopping-tab']",
-        action: async () => {
-          await fetch('/api/tutorial/load-shopping-data', { 
-            method: 'POST',
-            credentials: 'include'
-          });
-        }
+        id: 'cookbook-step-2',
+        title: 'Recipe Management',
+        description: 'You can view detailed recipes, add ingredients to your shopping list, or remove recipes you no longer want.',
+        targetElement: '[data-tutorial="cookbook-content"]'
       }
     ]
   },
   shopping: {
-    type: "shopping",
+    id: 'shopping', 
     steps: [
       {
-        id: "shopping-1",
-        title: "Smart Shopping Lists",
-        description: "Your ingredients are automatically organized by grocery store aisle to make shopping efficient!"
+        id: 'shopping-step-1',
+        title: 'Shopping List Feature',
+        description: 'Welcome to your shopping list! Here you can see ingredients from your saved recipes organized by store aisle.',
+        targetElement: '[data-tutorial="shopping-content"]'
       },
       {
-        id: "shopping-2",
-        title: "You're All Set!",
-        description: "That's it! Start discovering recipes that match your taste. Happy cooking!",
-        action: async () => {
-          await fetch('/api/tutorial/cleanup', { 
-            method: 'DELETE',
-            credentials: 'include'
-          });
-        }
+        id: 'shopping-step-2',
+        title: 'Organize Your Shopping',
+        description: 'Your shopping list organizes ingredients by store aisle to make grocery shopping easier. Check off items as you shop!',
+        targetElement: '[data-tutorial="shopping-content"]'
       }
     ]
   }
@@ -89,63 +74,66 @@ export function useOnboarding() {
   const [currentTutorial, setCurrentTutorial] = useState<TutorialType | null>(null);
   const [currentStep, setCurrentStep] = useState(0);
   const [isTutorialActive, setIsTutorialActive] = useState(false);
+  const [completedTutorials, setCompletedTutorials] = useState<Set<TutorialType>>(new Set());
 
-  // For testing: Always show tutorial on app run
+  // For testing: Always show initial tutorial on app run
   useEffect(() => {
-    if (user && !isTutorialActive) {
-      // Reset tutorial state for testing
+    if (user && !completedTutorials.has('welcome')) {
       setCurrentTutorial('welcome');
       setCurrentStep(0);
       setIsTutorialActive(true);
     }
-  }, [user]);
+  }, [user, completedTutorials]);
+
+  const startTutorial = async (tutorialType: TutorialType) => {
+    if (completedTutorials.has(tutorialType)) return;
+
+    // Load mock data for cookbook and shopping tutorials
+    if (tutorialType === 'cookbook') {
+      try {
+        await fetch('/api/tutorial/load-cookbook-data', {
+          method: 'POST',
+          credentials: 'include'
+        });
+      } catch (error) {
+        console.error('Failed to load cookbook tutorial data:', error);
+      }
+    } else if (tutorialType === 'shopping') {
+      try {
+        await fetch('/api/tutorial/load-shopping-data', {
+          method: 'POST', 
+          credentials: 'include'
+        });
+      } catch (error) {
+        console.error('Failed to load shopping tutorial data:', error);
+      }
+    }
+
+    setCurrentTutorial(tutorialType);
+    setCurrentStep(0);
+    setIsTutorialActive(true);
+  };
 
   const nextStep = async () => {
     if (!currentTutorial) return;
-
-    const tutorial = TUTORIALS[currentTutorial];
-    const currentStepData = tutorial.steps[currentStep];
-
-    // Execute action if present
-    if (currentStepData.action) {
-      try {
-        await currentStepData.action();
-      } catch (error) {
-        console.error('Tutorial action failed:', error);
-      }
-    }
-
-    // Move to next step or next tutorial
+    
+    const tutorial = tutorials[currentTutorial];
     if (currentStep < tutorial.steps.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
-      // Move to next tutorial or end
-      if (currentTutorial === 'welcome') {
-        setCurrentTutorial('cookbook');
-        setCurrentStep(0);
-      } else if (currentTutorial === 'cookbook') {
-        setCurrentTutorial('shopping');
-        setCurrentStep(0);
-      } else {
-        // End tutorial - complete cleanup and close
-        try {
-          await fetch('/api/tutorial/cleanup', { 
-            method: 'DELETE',
-            credentials: 'include'
-          });
-        } catch (error) {
-          console.error('Failed to cleanup tutorial data:', error);
-        }
-        setIsTutorialActive(false);
-        setCurrentTutorial(null);
-        setCurrentStep(0);
-      }
+      // End current tutorial
+      await endTutorial();
     }
   };
 
-  const skipTutorial = async () => {
+  const endTutorial = async () => {
+    if (!currentTutorial) return;
+
+    // Mark tutorial as completed
+    setCompletedTutorials(prev => new Set([...Array.from(prev), currentTutorial]));
+
+    // Clean up tutorial data
     try {
-      // Clean up any tutorial data
       await fetch('/api/tutorial/cleanup', { 
         method: 'DELETE',
         credentials: 'include'
@@ -153,18 +141,23 @@ export function useOnboarding() {
     } catch (error) {
       console.error('Failed to cleanup tutorial data:', error);
     }
-    
+
     setIsTutorialActive(false);
     setCurrentTutorial(null);
     setCurrentStep(0);
   };
 
+  const skipTutorial = async () => {
+    await endTutorial();
+  };
+
   return {
-    currentTutorial,
+    currentTutorial: currentTutorial ? tutorials[currentTutorial] : null,
     currentStep,
     isTutorialActive,
+    startTutorial,
     nextStep,
     skipTutorial,
-    tutorial: currentTutorial ? TUTORIALS[currentTutorial] : null
+    completedTutorials
   };
 }

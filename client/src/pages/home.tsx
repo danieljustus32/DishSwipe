@@ -73,7 +73,8 @@ export default function Home() {
     skipTutorial, 
     nextStep, 
     isTutorialActive,
-    tutorial
+    startTutorial,
+    completedTutorials
   } = useOnboarding();
 
   // Fetch user status for usage tracking
@@ -230,6 +231,17 @@ export default function Home() {
     }
   };
 
+  const handleViewChange = async (view: ViewType) => {
+    setCurrentView(view);
+    
+    // Start tutorial for specific tabs if not completed
+    if (view === 'cookbook' && !completedTutorials.has('cookbook')) {
+      await startTutorial('cookbook');
+    } else if (view === 'shopping' && !completedTutorials.has('shopping')) {
+      await startTutorial('shopping');
+    }
+  };
+
   const handleLogout = () => {
     window.location.href = "/api/logout";
   };
@@ -306,7 +318,7 @@ export default function Home() {
         <nav className="bg-white border-b border-border">
           <div className="flex">
             <button
-              onClick={() => setCurrentView("discover")}
+              onClick={() => handleViewChange("discover")}
               className={`flex-1 py-3 px-4 font-medium ${
                 currentView === "discover"
                   ? "text-primary border-b-2 border-primary"
@@ -319,7 +331,7 @@ export default function Home() {
               </div>
             </button>
             <button
-              onClick={() => setCurrentView("cookbook")}
+              onClick={() => handleViewChange("cookbook")}
               data-tutorial="cookbook-tab"
               className={`flex-1 py-3 px-4 font-medium ${
                 currentView === "cookbook"
@@ -333,7 +345,7 @@ export default function Home() {
               </div>
             </button>
             <button
-              onClick={() => setCurrentView("shopping")}
+              onClick={() => handleViewChange("shopping")}
               data-tutorial="shopping-tab"
               className={`flex-1 py-3 px-4 font-medium ${
                 currentView === "shopping"
@@ -376,11 +388,12 @@ export default function Home() {
         )}
 
         {/* Onboarding Tutorial */}
-        {isTutorialActive && tutorial && (
+        {isTutorialActive && currentTutorial && (
           <OnboardingTutorial
-            tutorial={tutorial}
+            tutorial={currentTutorial}
             step={currentStep}
             onSkip={skipTutorial}
+            onNext={nextStep}
             onNext={nextStep}
           />
         )}
