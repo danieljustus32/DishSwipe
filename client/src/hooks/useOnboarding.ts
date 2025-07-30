@@ -98,7 +98,7 @@ export function useOnboarding() {
       setCurrentStep(0);
       setIsTutorialActive(true);
     }
-  }, [user, isTutorialActive]);
+  }, [user]);
 
   const nextStep = async () => {
     if (!currentTutorial) return;
@@ -127,7 +127,15 @@ export function useOnboarding() {
         setCurrentTutorial('shopping');
         setCurrentStep(0);
       } else {
-        // End tutorial
+        // End tutorial - complete cleanup and close
+        try {
+          await fetch('/api/tutorial/cleanup', { 
+            method: 'DELETE',
+            credentials: 'include'
+          });
+        } catch (error) {
+          console.error('Failed to cleanup tutorial data:', error);
+        }
         setIsTutorialActive(false);
         setCurrentTutorial(null);
         setCurrentStep(0);

@@ -2,7 +2,7 @@
 
 export const mockCookbookRecipes = [
   {
-    id: "tutorial_recipe_1",
+    id: "recipe_tutorial_1",
     spoonacularId: 999001,
     title: "Classic Spaghetti Carbonara",
     image: "https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?w=312&h=231&fit=crop",
@@ -36,7 +36,7 @@ export const mockCookbookRecipes = [
     }
   },
   {
-    id: "tutorial_recipe_2",
+    id: "recipe_tutorial_2",
     spoonacularId: 999002,
     title: "Chicken Caesar Salad",
     image: "https://images.unsplash.com/photo-1546793665-c74683f339c1?w=312&h=231&fit=crop",
@@ -73,15 +73,15 @@ export const mockCookbookRecipes = [
 
 export const mockShoppingListItems = [
   // From Carbonara recipe
-  { id: "tutorial_item_1", name: "spaghetti", amount: "400 g", aisle: "Pasta and Rice", checked: false, recipeId: "tutorial_recipe_1" },
-  { id: "tutorial_item_2", name: "pancetta", amount: "150 g", aisle: "Meat", checked: false, recipeId: "tutorial_recipe_1" },
-  { id: "tutorial_item_3", name: "eggs", amount: "3 large", aisle: "Dairy", checked: false, recipeId: "tutorial_recipe_1" },
-  { id: "tutorial_item_4", name: "parmesan cheese", amount: "150 g", aisle: "Dairy", checked: false, recipeId: "tutorial_recipe_1" },
-  { id: "tutorial_item_5", name: "black pepper", amount: "1 tsp", aisle: "Spices and Seasonings", checked: false, recipeId: "tutorial_recipe_1" },
+  { id: "tutorial_item_1", name: "spaghetti", amount: "400 g", aisle: "Pasta and Rice", checked: false, recipeId: "recipe_tutorial_1" },
+  { id: "tutorial_item_2", name: "pancetta", amount: "150 g", aisle: "Meat", checked: false, recipeId: "recipe_tutorial_1" },
+  { id: "tutorial_item_3", name: "eggs", amount: "3 large", aisle: "Dairy", checked: false, recipeId: "recipe_tutorial_1" },
+  { id: "tutorial_item_4", name: "parmesan cheese", amount: "150 g", aisle: "Dairy", checked: false, recipeId: "recipe_tutorial_1" },
+  { id: "tutorial_item_5", name: "black pepper", amount: "1 tsp", aisle: "Spices and Seasonings", checked: false, recipeId: "recipe_tutorial_1" },
   
   // From Caesar Salad recipe
-  { id: "tutorial_item_6", name: "chicken breast", amount: "300 g", aisle: "Meat", checked: false, recipeId: "tutorial_recipe_2" },
-  { id: "tutorial_item_7", name: "romaine lettuce", amount: "2 heads", aisle: "Produce", checked: false, recipeId: "tutorial_recipe_2" },
-  { id: "tutorial_item_8", name: "bread", amount: "4 slices", aisle: "Bakery", checked: false, recipeId: "tutorial_recipe_2" },
-  { id: "tutorial_item_9", name: "anchovy paste", amount: "1 tbsp", aisle: "Condiments", checked: false, recipeId: "tutorial_recipe_2" },
+  { id: "tutorial_item_6", name: "chicken breast", amount: "300 g", aisle: "Meat", checked: false, recipeId: "recipe_tutorial_2" },
+  { id: "tutorial_item_7", name: "romaine lettuce", amount: "2 heads", aisle: "Produce", checked: false, recipeId: "recipe_tutorial_2" },
+  { id: "tutorial_item_8", name: "bread", amount: "4 slices", aisle: "Bakery", checked: false, recipeId: "recipe_tutorial_2" },
+  { id: "tutorial_item_9", name: "anchovy paste", amount: "1 tbsp", aisle: "Condiments", checked: false, recipeId: "recipe_tutorial_2" },
 ];

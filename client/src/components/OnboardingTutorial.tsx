@@ -56,8 +56,12 @@ export default function OnboardingTutorial({ tutorial, step, onSkip, onNext }: O
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={onSkip}
-                className="h-8 w-8 p-0"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onSkip();
+                }}
+                className="h-8 w-8 p-0 hover:bg-gray-100 dark:hover:bg-gray-700"
               >
                 <X className="h-4 w-4" />
               </Button>
@@ -83,7 +87,15 @@ export default function OnboardingTutorial({ tutorial, step, onSkip, onNext }: O
                 ))}
               </div>
               
-              <Button onClick={onNext} size="sm" className="ml-4">
+              <Button 
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onNext();
+                }} 
+                size="sm" 
+                className="ml-4"
+              >
                 {step === tutorial.steps.length - 1 ? 'Finish' : 'Next'}
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
