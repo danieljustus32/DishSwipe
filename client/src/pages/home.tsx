@@ -72,7 +72,8 @@ export default function Home() {
     currentStep, 
     skipTutorial, 
     nextStep, 
-    isTutorialActive 
+    isTutorialActive,
+    tutorial
   } = useOnboarding();
 
   // Fetch user status for usage tracking
@@ -375,9 +376,9 @@ export default function Home() {
         )}
 
         {/* Onboarding Tutorial */}
-        {isTutorialActive && (
+        {isTutorialActive && tutorial && (
           <OnboardingTutorial
-            tutorial={currentTutorial}
+            tutorial={tutorial}
             step={currentStep}
             onSkip={skipTutorial}
             onNext={nextStep}
