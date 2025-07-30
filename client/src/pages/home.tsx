@@ -78,6 +78,7 @@ export default function Home() {
         title: "Unauthorized",
         description: "You are logged out. Logging in again...",
         variant: "destructive",
+        duration: 1000,
       });
       setTimeout(() => {
         window.location.href = "/api/login";
@@ -123,6 +124,7 @@ export default function Home() {
           title: "Unauthorized",
           description: "You are logged out. Logging in again...",
           variant: "destructive",
+          duration: 1000,
         });
         setTimeout(() => {
           window.location.href = "/api/login";
@@ -133,6 +135,7 @@ export default function Home() {
         title: "Error",
         description: "Failed to load recipes. Please try again.",
         variant: "destructive",
+        duration: 1000,
       });
     } finally {
       setIsLoadingRecipes(false);
@@ -162,7 +165,7 @@ export default function Home() {
           title: "Daily Limit Reached",
           description: "You've reached your daily limit of 50 likes. Upgrade to FlavorSwipe Gold for unlimited likes!",
           variant: "destructive",
-          duration: 5000,
+          duration: 1000,
         });
         return; // Don't proceed with the swipe
       }

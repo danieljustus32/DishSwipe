@@ -76,6 +76,7 @@ export default function RecipeModal({ recipe, onClose, isFromCookbook = false }:
         toast({
           title: "Already Saved!",
           description: `${recipe.title} is already in your cookbook`,
+          duration: 1000,
         });
       } else {
         throw new Error(`${response.status}: ${response.statusText}`);
@@ -86,6 +87,7 @@ export default function RecipeModal({ recipe, onClose, isFromCookbook = false }:
           title: "Unauthorized",
           description: "You are logged out. Logging in again...",
           variant: "destructive",
+          duration: 1000,
         });
         setTimeout(() => {
           window.location.href = "/api/login";
@@ -96,6 +98,7 @@ export default function RecipeModal({ recipe, onClose, isFromCookbook = false }:
         title: "Error",
         description: "Failed to save recipe. Please try again.",
         variant: "destructive",
+        duration: 1000,
       });
     } finally {
       setIsSaving(false);
@@ -120,6 +123,7 @@ export default function RecipeModal({ recipe, onClose, isFromCookbook = false }:
       toast({
         title: "Added to Shopping List!",
         description: `Ingredients for ${recipe.title} added to your shopping list`,
+        duration: 1000,
       });
     } catch (error) {
       if (isUnauthorizedError(error as Error)) {
@@ -127,6 +131,7 @@ export default function RecipeModal({ recipe, onClose, isFromCookbook = false }:
           title: "Unauthorized",
           description: "You are logged out. Logging in again...",
           variant: "destructive",
+          duration: 1000,
         });
         setTimeout(() => {
           window.location.href = "/api/login";
@@ -137,6 +142,7 @@ export default function RecipeModal({ recipe, onClose, isFromCookbook = false }:
         title: "Error",
         description: "Failed to add ingredients to shopping list.",
         variant: "destructive",
+        duration: 1000,
       });
     } finally {
       setIsAddingToShoppingList(false);
@@ -163,12 +169,14 @@ export default function RecipeModal({ recipe, onClose, isFromCookbook = false }:
       toast({
         title: "Added to List", 
         description: `${ingredient.name} added to shopping list`,
+        duration: 1000,
       });
     } catch (error) {
       toast({
         title: "Error",
         description: "Failed to add ingredient to shopping list.",
         variant: "destructive",
+        duration: 1000,
       });
     }
   };

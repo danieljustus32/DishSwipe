@@ -58,6 +58,7 @@ export function ProfileEditForm({ userStatus, onCancel, onSuccess }: ProfileEdit
       toast({
         title: "Profile Updated",
         description: "Your profile information has been successfully updated.",
+        duration: 1000,
       });
       onSuccess();
     },
@@ -67,6 +68,7 @@ export function ProfileEditForm({ userStatus, onCancel, onSuccess }: ProfileEdit
         title: "Update Failed",
         description: "Failed to update your profile. Please try again.",
         variant: "destructive",
+        duration: 1000,
       });
     },
   });

@@ -81,6 +81,7 @@ export default function ShoppingView() {
         title: "Error",
         description: "Failed to update item. Please try again.",
         variant: "destructive",
+        duration: 1000,
       });
     },
   });
@@ -103,6 +104,7 @@ export default function ShoppingView() {
       toast({
         title: "Item Removed",
         description: "Item removed from shopping list",
+        duration: 1000,
       });
     },
     onError: (error) => {
@@ -111,6 +113,7 @@ export default function ShoppingView() {
           title: "Unauthorized",
           description: "You are logged out. Logging in again...",
           variant: "destructive",
+          duration: 1000,
         });
         setTimeout(() => {
           window.location.href = "/api/login";
@@ -121,6 +124,7 @@ export default function ShoppingView() {
         title: "Error",
         description: "Failed to remove item. Please try again.",
         variant: "destructive",
+        duration: 1000,
       });
     },
   });
@@ -143,6 +147,7 @@ export default function ShoppingView() {
       toast({
         title: "Shopping List Cleared",
         description: "All items removed from shopping list",
+        duration: 1000,
       });
     },
     onError: (error) => {
@@ -151,6 +156,7 @@ export default function ShoppingView() {
           title: "Unauthorized",
           description: "You are logged out. Logging in again...",
           variant: "destructive",
+          duration: 1000,
         });
         setTimeout(() => {
           window.location.href = "/api/login";
@@ -161,6 +167,7 @@ export default function ShoppingView() {
         title: "Error",
         description: "Failed to clear shopping list. Please try again.",
         variant: "destructive",
+        duration: 1000,
       });
     },
   });
@@ -173,6 +180,7 @@ export default function ShoppingView() {
       title: "Unauthorized",
       description: "You are logged out. Logging in again...",
       variant: "destructive",
+      duration: 1000,
     });
     setTimeout(() => {
       window.location.href = "/api/login";

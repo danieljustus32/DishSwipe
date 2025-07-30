@@ -73,6 +73,7 @@ export default function CookbookView() {
       toast({
         title: "Recipe Removed",
         description: "Recipe removed from your cookbook",
+        duration: 1000,
       });
     },
     onError: (error) => {
@@ -91,6 +92,7 @@ export default function CookbookView() {
         title: "Error",
         description: "Failed to remove recipe. Please try again.",
         variant: "destructive",
+        duration: 1000,
       });
     },
   });
@@ -113,6 +115,7 @@ export default function CookbookView() {
       toast({
         title: "Added to Shopping List!",
         description: `Ingredients for ${recipe?.title} added to your shopping list`,
+        duration: 1000,
       });
     },
     onError: (error) => {
@@ -121,6 +124,7 @@ export default function CookbookView() {
           title: "Unauthorized",
           description: "You are logged out. Logging in again...",
           variant: "destructive",
+          duration: 1000,
         });
         setTimeout(() => {
           window.location.href = "/api/login";
@@ -131,6 +135,7 @@ export default function CookbookView() {
         title: "Error",
         description: "Failed to add ingredients to shopping list.",
         variant: "destructive",
+        duration: 1000,
       });
     },
   });
@@ -140,6 +145,7 @@ export default function CookbookView() {
       title: "Unauthorized",
       description: "You are logged out. Logging in again...",
       variant: "destructive",
+      duration: 1000,
     });
     setTimeout(() => {
       window.location.href = "/api/login";

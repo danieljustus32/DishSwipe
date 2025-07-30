@@ -52,11 +52,13 @@ function SubscriptionForm({ clientSecret }: { clientSecret: string }) {
         title: "Payment Failed",
         description: error.message,
         variant: "destructive",
+        duration: 1000,
       });
     } else {
       toast({
         title: "Welcome to FlavorSwipe Gold!",
         description: "Your subscription is now active. Enjoy unlimited recipe likes!",
+        duration: 1000,
       });
       queryClient.invalidateQueries({ queryKey: ['/api/user/status'] });
     }
@@ -96,6 +98,7 @@ function SubscriptionCard() {
         toast({
           title: "Already Subscribed",
           description: "You're already a FlavorSwipe Gold member!",
+          duration: 1000,
         });
       }
       setIsCreating(false);
@@ -106,6 +109,7 @@ function SubscriptionCard() {
         title: "Subscription Error", 
         description: "Failed to create subscription. Please try again.",
         variant: "destructive",
+        duration: 1000,
       });
       setIsCreating(false);
     },
