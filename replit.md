@@ -93,6 +93,7 @@ The application follows a monorepo structure with clear separation between clien
 - `SESSION_SECRET`: Secret for session encryption
 - `REPLIT_DOMAINS`: Authorized domains for OIDC
 - `ISSUER_URL`: OIDC issuer URL (defaults to Replit)
+- `VITE_TUTORIAL_TESTING`: Set to 'true' to show tutorial on every app run for testing purposes (default: show only to first-time users)
 
 ### Key Libraries
 - **@neondatabase/serverless**: PostgreSQL client optimized for serverless
@@ -123,6 +124,15 @@ The application follows a monorepo structure with clear separation between clien
 The application is designed to run seamlessly on Replit with minimal configuration, while maintaining the flexibility to deploy on other platforms with appropriate environment variable configuration.
 
 ## Recent Changes
+
+**January 31, 2025**
+- ✓ Completed comprehensive onboarding tutorial system with tab-specific triggering
+- ✓ Fixed tutorial modal dismiss button and finish functionality
+- ✓ Restructured tutorial flow: Welcome (2 steps) → Cookbook tutorial (2 steps when visiting tab) → Shopping tutorial (2 steps when visiting tab)
+- ✓ Added VITE_TUTORIAL_TESTING environment variable to control tutorial behavior for testing vs production
+- ✓ Fixed database foreign key constraint errors in tutorial mock data
+- ✓ Enhanced tutorial cleanup system to properly remove mock data after completion
+- ✓ Added proper completion tracking to prevent tutorial repetition for users
 
 **January 29, 2025**
 - ✓ Implemented recipe filtering system to prevent showing previously liked/disliked recipes

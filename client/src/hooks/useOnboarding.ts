@@ -76,14 +76,30 @@ export function useOnboarding() {
   const [isTutorialActive, setIsTutorialActive] = useState(false);
   const [completedTutorials, setCompletedTutorials] = useState<Set<TutorialType>>(new Set());
 
-  // For testing: Always show initial tutorial on app run
+  // Show tutorial based on environment variable setting
   useEffect(() => {
-    if (user && !completedTutorials.has('welcome')) {
-      setCurrentTutorial('welcome');
-      setCurrentStep(0);
-      setIsTutorialActive(true);
+    if (!user) return;
+    
+    const showTutorialForTesting = import.meta.env.VITE_TUTORIAL_TESTING === 'true';
+    
+    if (showTutorialForTesting) {
+      // For testing: Always show tutorial on app run
+      if (!isTutorialActive) {
+        setCurrentTutorial('welcome');
+        setCurrentStep(0);
+        setIsTutorialActive(true);
+        // Reset completed tutorials for testing
+        setCompletedTutorials(new Set());
+      }
+    } else {
+      // Production: Only show to first-time users
+      if (!completedTutorials.has('welcome') && !isTutorialActive) {
+        setCurrentTutorial('welcome');
+        setCurrentStep(0);
+        setIsTutorialActive(true);
+      }
     }
-  }, [user, completedTutorials]);
+  }, [user, completedTutorials, isTutorialActive]);
 
   const startTutorial = async (tutorialType: TutorialType) => {
     if (completedTutorials.has(tutorialType)) return;

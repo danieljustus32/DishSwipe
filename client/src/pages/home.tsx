@@ -394,7 +394,6 @@ export default function Home() {
             step={currentStep}
             onSkip={skipTutorial}
             onNext={nextStep}
-            onNext={nextStep}
           />
         )}
       </div>
