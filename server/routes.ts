@@ -626,10 +626,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           nutrition: recipe.nutrition,
         });
         
-        await storage.saveUserRecipe({
-          userId,
-          recipeId: recipe.id,
-        });
+        await storage.saveUserRecipe(userId, recipe.id);
       }
       
       res.json({ message: "Tutorial cookbook data loaded" });
@@ -645,8 +642,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Add mock shopping list items for tutorial
       for (const item of mockShoppingListItems) {
-        await storage.addShoppingListItem({
-          userId,
+        await storage.addShoppingListItem(userId, {
           name: item.name,
           amount: item.amount,
           aisle: item.aisle,

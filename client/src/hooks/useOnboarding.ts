@@ -104,10 +104,14 @@ export function useOnboarding() {
     if (!user) return;
     
     const showTutorialForTesting = import.meta.env.VITE_TUTORIAL_TESTING === 'true';
+    console.log('Tutorial Testing Mode:', showTutorialForTesting);
+    console.log('Completed Tutorials:', Array.from(completedTutorials));
+    console.log('Is Tutorial Active:', isTutorialActive);
     
     if (showTutorialForTesting) {
       // For testing: Always show tutorial on app run
       if (!isTutorialActive) {
+        console.log('Starting tutorial in testing mode');
         setCurrentTutorial('welcome');
         setCurrentStep(0);
         setIsTutorialActive(true);
@@ -118,12 +122,21 @@ export function useOnboarding() {
     } else {
       // Production: Only show to first-time users
       if (!completedTutorials.has('welcome') && !isTutorialActive) {
+        console.log('Starting tutorial for first-time user');
         setCurrentTutorial('welcome');
         setCurrentStep(0);
         setIsTutorialActive(true);
+      } else if (completedTutorials.has('welcome') && isTutorialActive) {
+        // If all tutorials are completed but tutorial is still active, deactivate it
+        console.log('All tutorials completed, deactivating tutorial');
+        setIsTutorialActive(false);
+        setCurrentTutorial(null);
+        setCurrentStep(0);
+      } else {
+        console.log('Tutorial already completed or active');
       }
     }
-  }, [user]);
+  }, [user, completedTutorials, isTutorialActive]);
 
   const startTutorial = async (tutorialType: TutorialType) => {
     // Don't start tutorial if already completed (unless in testing mode)
