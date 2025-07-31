@@ -76,6 +76,29 @@ export function useOnboarding() {
   const [isTutorialActive, setIsTutorialActive] = useState(false);
   const [completedTutorials, setCompletedTutorials] = useState<Set<TutorialType>>(new Set());
 
+  // Load completed tutorials from localStorage on component mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('flavorswipe-completed-tutorials');
+      if (saved) {
+        const tutorialArray = JSON.parse(saved);
+        setCompletedTutorials(new Set(tutorialArray));
+      }
+    } catch (error) {
+      console.error('Failed to load completed tutorials from localStorage:', error);
+    }
+  }, []);
+
+  // Save completed tutorials to localStorage whenever they change
+  useEffect(() => {
+    try {
+      const tutorialArray = Array.from(completedTutorials);
+      localStorage.setItem('flavorswipe-completed-tutorials', JSON.stringify(tutorialArray));
+    } catch (error) {
+      console.error('Failed to save completed tutorials to localStorage:', error);
+    }
+  }, [completedTutorials]);
+
   // Show tutorial based on environment variable setting
   useEffect(() => {
     if (!user) return;
@@ -90,6 +113,7 @@ export function useOnboarding() {
         setIsTutorialActive(true);
         // Reset completed tutorials for testing
         setCompletedTutorials(new Set());
+        localStorage.removeItem('flavorswipe-completed-tutorials');
       }
     } else {
       // Production: Only show to first-time users
@@ -99,10 +123,12 @@ export function useOnboarding() {
         setIsTutorialActive(true);
       }
     }
-  }, [user, completedTutorials, isTutorialActive]);
+  }, [user]);
 
   const startTutorial = async (tutorialType: TutorialType) => {
-    if (completedTutorials.has(tutorialType)) return;
+    // Don't start tutorial if already completed (unless in testing mode)
+    const showTutorialForTesting = import.meta.env.VITE_TUTORIAL_TESTING === 'true';
+    if (!showTutorialForTesting && completedTutorials.has(tutorialType)) return;
 
     // Load mock data for cookbook and shopping tutorials
     if (tutorialType === 'cookbook') {
