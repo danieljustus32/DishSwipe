@@ -3,11 +3,12 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
-import { X, Clock, Users, ChefHat, Plus } from "lucide-react";
+import { X, Clock, Users, ChefHat, Plus, Mic2 } from "lucide-react";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { formatQuantity } from "@/lib/utils";
 import NutritionChart from "@/components/nutrition-chart";
 import RecipePlaceholder from "./recipe-placeholder";
+import HandsFreeCookingMode from "./HandsFreeCookingMode";
 
 interface Recipe {
   id: string;
@@ -49,6 +50,7 @@ export default function RecipeModal({ recipe, onClose, isFromCookbook = false }:
   const queryClient = useQueryClient();
   const [isSaving, setIsSaving] = useState(false);
   const [isAddingToShoppingList, setIsAddingToShoppingList] = useState(false);
+  const [isHandsFreeModeOpen, setIsHandsFreeModeOpen] = useState(false);
 
   const handleSaveRecipe = async () => {
     setIsSaving(true);
@@ -306,8 +308,24 @@ export default function RecipeModal({ recipe, onClose, isFromCookbook = false }:
               {isAddingToShoppingList ? "Adding..." : "Add to Shopping List"}
             </Button>
           </div>
+          
+          {/* Hands-Free Cooking Button */}
+          <Button
+            onClick={() => setIsHandsFreeModeOpen(true)}
+            className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold flex items-center justify-center gap-2"
+          >
+            <Mic2 className="w-4 h-4" />
+            Start Hands-Free Cooking
+          </Button>
         </div>
       </div>
+
+      {/* Hands-Free Cooking Mode */}
+      <HandsFreeCookingMode
+        recipe={recipe}
+        isOpen={isHandsFreeModeOpen}
+        onClose={() => setIsHandsFreeModeOpen(false)}
+      />
     </div>
   );
 }
