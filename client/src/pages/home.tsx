@@ -3,7 +3,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+
 import { Progress } from "@/components/ui/progress";
 import { Search, Heart, ShoppingCart, User, Crown } from "lucide-react";
 import RecipeCardStack from "@/components/recipe-card-stack";
@@ -279,12 +279,6 @@ export default function Home() {
                   <User className="w-4 h-4" />
                 </Button>
               </Link>
-              <Avatar className="w-8 h-8">
-                <AvatarImage src={(user as any)?.profileImageUrl || undefined} />
-                <AvatarFallback className="bg-white text-primary">
-                  {(user as any)?.firstName?.charAt(0) || (user as any)?.email?.charAt(0) || "U"}
-                </AvatarFallback>
-              </Avatar>
               <Button 
                 variant="ghost" 
                 size="sm" 
