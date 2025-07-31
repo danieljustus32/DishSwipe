@@ -133,12 +133,6 @@ The application is designed to run seamlessly on Replit with minimal configurati
 - ✓ Fixed database foreign key constraint errors in tutorial mock data
 - ✓ Enhanced tutorial cleanup system to properly remove mock data after completion
 - ✓ Added proper completion tracking to prevent tutorial repetition for users
-- ✓ Implemented voice-activated recipe navigation and hands-free cooking mode
-- ✓ Created speech recognition hooks with Web Speech API integration
-- ✓ Added comprehensive voice command system for app navigation and recipe interaction
-- ✓ Built hands-free cooking mode with step-by-step voice guidance and timer controls
-- ✓ Integrated text-to-speech for recipe instructions and ingredient reading
-- ✓ Added voice control buttons to main header and recipe modals
 
 **January 29, 2025**
 - ✓ Implemented recipe filtering system to prevent showing previously liked/disliked recipes
