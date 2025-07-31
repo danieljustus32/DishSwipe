@@ -5,7 +5,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 
 import { Progress } from "@/components/ui/progress";
-import { Search, Heart, ShoppingCart, User, Crown } from "lucide-react";
+import { Search, Heart, ShoppingCart, User, Crown, Mic } from "lucide-react";
 import RecipeCardStack from "@/components/recipe-card-stack";
 import RecipeModal from "@/components/recipe-modal";
 import CookbookView from "@/components/cookbook-view";
@@ -14,6 +14,8 @@ import { isUnauthorizedError } from "@/lib/authUtils";
 import { Link } from "wouter";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import OnboardingTutorial from "@/components/OnboardingTutorial";
+import VoiceControlModal from "@/components/VoiceControlModal";
+import { useVoiceCommands, VoiceCommand } from "@/hooks/useVoiceCommands";
 
 type ViewType = "discover" | "cookbook" | "shopping";
 
@@ -65,6 +67,7 @@ export default function Home() {
   const [currentRecipeIndex, setCurrentRecipeIndex] = useState(0);
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   const [isLoadingRecipes, setIsLoadingRecipes] = useState(false);
+  const [showVoiceControl, setShowVoiceControl] = useState(false);
   
   // Onboarding tutorial
   const { 
@@ -76,6 +79,76 @@ export default function Home() {
     startTutorial,
     completedTutorials
   } = useOnboarding();
+
+  // Voice commands for main navigation
+  const mainVoiceCommands: VoiceCommand[] = [
+    {
+      command: "go to discover",
+      action: () => setCurrentView("discover"),
+      description: "Switch to recipe discovery view",
+      variations: ["discover", "find recipes", "swipe recipes"]
+    },
+    {
+      command: "go to cookbook",
+      action: () => {
+        setCurrentView("cookbook");
+        if (!completedTutorials.has('cookbook')) {
+          startTutorial('cookbook');
+        }
+      },
+      description: "Switch to saved recipes cookbook",
+      variations: ["cookbook", "my recipes", "saved recipes"]
+    },
+    {
+      command: "go to shopping",
+      action: () => {
+        setCurrentView("shopping");
+        if (!completedTutorials.has('shopping')) {
+          startTutorial('shopping');
+        }
+      },
+      description: "Switch to shopping list view",
+      variations: ["shopping", "shopping list", "grocery list"]
+    },
+    {
+      command: "next recipe",
+      action: () => handleSwipe('right'),
+      description: "Swipe to next recipe",
+      variations: ["next", "skip recipe", "swipe right"]
+    },
+    {
+      command: "like recipe",
+      action: () => handleSwipe('right'),
+      description: "Like current recipe",
+      variations: ["like", "save recipe", "love it"]
+    },
+    {
+      command: "dislike recipe",
+      action: () => handleSwipe('left'),
+      description: "Dislike current recipe",
+      variations: ["dislike", "not interested", "pass", "swipe left"]
+    },
+    {
+      command: "show recipe details",
+      action: () => {
+        if (recipes.length > 0 && currentRecipeIndex < recipes.length) {
+          setSelectedRecipe(recipes[currentRecipeIndex]);
+        }
+      },
+      description: "View detailed recipe information",
+      variations: ["recipe details", "more info", "view recipe"]
+    }
+  ];
+
+  // Voice control hook
+  const {
+    isListening,
+    isSupported,
+    startListening,
+    stopListening,
+    lastCommand,
+    confidence
+  } = useVoiceCommands(mainVoiceCommands);
 
   // Fetch user status for usage tracking
   const { data: userStatus } = useQuery<UserStatus>({
@@ -270,6 +343,14 @@ export default function Home() {
               )}
             </h1>
             <div className="flex items-center space-x-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowVoiceControl(true)}
+                className="text-primary-foreground hover:bg-primary-foreground/10"
+              >
+                <Mic className="w-4 h-4" />
+              </Button>
               <Link href="/profile">
                 <Button 
                   variant="ghost" 
@@ -380,6 +461,20 @@ export default function Home() {
             onClose={() => setSelectedRecipe(null)}
           />
         )}
+
+        {/* Voice Control Modal */}
+        <VoiceControlModal
+          isOpen={showVoiceControl}
+          onClose={() => setShowVoiceControl(false)}
+          isListening={isListening}
+          isSupported={isSupported}
+          onStartListening={startListening}
+          onStopListening={stopListening}
+          lastCommand={lastCommand}
+          confidence={confidence}
+          commands={mainVoiceCommands}
+          error={null}
+        />
 
         {/* Onboarding Tutorial */}
         {isTutorialActive && currentTutorial && (

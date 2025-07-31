@@ -3,11 +3,13 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
-import { X, Clock, Users, ChefHat, Plus } from "lucide-react";
+import { X, Clock, Users, ChefHat, Plus, Mic } from "lucide-react";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { formatQuantity } from "@/lib/utils";
 import NutritionChart from "@/components/nutrition-chart";
 import RecipePlaceholder from "./recipe-placeholder";
+import HandsFreeCookingMode from "./HandsFreeCookingMode";
+import VoiceControlModal from "./VoiceControlModal";
 
 interface Recipe {
   id: string;
@@ -47,6 +49,8 @@ interface RecipeModalProps {
 export default function RecipeModal({ recipe, onClose, isFromCookbook = false }: RecipeModalProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [showHandsFreeCooking, setShowHandsFreeCooking] = useState(false);
+  const [showVoiceControl, setShowVoiceControl] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isAddingToShoppingList, setIsAddingToShoppingList] = useState(false);
 
@@ -306,8 +310,48 @@ export default function RecipeModal({ recipe, onClose, isFromCookbook = false }:
               {isAddingToShoppingList ? "Adding..." : "Add to Shopping List"}
             </Button>
           </div>
+          
+          {/* Voice Control Features */}
+          <div className="grid grid-cols-2 gap-2">
+            <Button
+              onClick={() => setShowHandsFreeCooking(true)}
+              variant="outline"
+              className="flex-1"
+            >
+              <ChefHat className="w-4 h-4 mr-2" />
+              Cook Mode
+            </Button>
+            <Button
+              onClick={() => setShowVoiceControl(true)}
+              variant="outline"
+              className="flex-1"
+            >
+              <Mic className="w-4 h-4 mr-2" />
+              Voice Help
+            </Button>
+          </div>
         </div>
       </div>
+
+      {/* Voice Control Modals */}
+      <HandsFreeCookingMode
+        isOpen={showHandsFreeCooking}
+        onClose={() => setShowHandsFreeCooking(false)}
+        recipe={recipe}
+      />
+
+      <VoiceControlModal
+        isOpen={showVoiceControl}
+        onClose={() => setShowVoiceControl(false)}
+        isListening={false}
+        isSupported={typeof window !== 'undefined' && ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)}
+        onStartListening={() => {}}
+        onStopListening={() => {}}
+        lastCommand={null}
+        confidence={0}
+        commands={[]}
+        error={null}
+      />
     </div>
   );
 }
