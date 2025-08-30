@@ -268,7 +268,7 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[calc(100vw-10px)] max-w-4xl h-[calc(100vh-10px)] max-h-[95vh] overflow-y-auto p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <ChefHat className="w-5 h-5" />
@@ -278,13 +278,13 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
 
         <div className="space-y-6">
           {/* Phase Indicator */}
-          <div className="flex items-center justify-center gap-4">
-            <Badge variant={phase === 'preparation' ? 'default' : 'secondary'} className="px-4 py-2">
-              <Scale className="w-4 h-4 mr-2" />
+          <div className="flex items-center justify-center gap-2 sm:gap-4">
+            <Badge variant={phase === 'preparation' ? 'default' : 'secondary'} className="px-2 py-1 sm:px-4 sm:py-2 text-xs sm:text-sm">
+              <Scale className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
               Preparation
             </Badge>
-            <Badge variant={phase === 'cooking' ? 'default' : 'secondary'} className="px-4 py-2">
-              <ChefHat className="w-4 h-4 mr-2" />
+            <Badge variant={phase === 'cooking' ? 'default' : 'secondary'} className="px-2 py-1 sm:px-4 sm:py-2 text-xs sm:text-sm">
+              <ChefHat className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
               Cooking
             </Badge>
           </div>
@@ -345,11 +345,11 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
               )}
 
               {showCommands && (
-                <div className="grid grid-cols-2 gap-2 text-xs">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
                   {voiceCommands.map((cmd, index) => (
-                    <div key={index} className="flex justify-between p-2 bg-muted rounded">
+                    <div key={index} className="flex flex-col sm:flex-row sm:justify-between p-2 bg-muted rounded gap-1">
                       <span className="font-medium">"{cmd.phrases[0]}"</span>
-                      <span className="text-muted-foreground">{cmd.description}</span>
+                      <span className="text-muted-foreground text-xs">{cmd.description}</span>
                     </div>
                   ))}
                 </div>
@@ -388,35 +388,41 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
                     size="sm"
                     onClick={handlePrevious}
                     disabled={currentStep === 0}
+                    className="text-xs sm:text-sm"
                   >
-                    <SkipBack className="w-4 h-4 mr-2" />
-                    Previous
+                    <SkipBack className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                    <span className="hidden sm:inline">Previous</span>
+                    <span className="sm:hidden">Prev</span>
                   </Button>
                   <Button
                     variant="default"
                     size="sm"
                     onClick={handleCompleteIngredient}
                     disabled={completedIngredients.has(getCurrentIngredient()?.id)}
+                    className="text-xs sm:text-sm"
                   >
-                    <CheckCircle2 className="w-4 h-4 mr-2" />
-                    Mark Complete
+                    <CheckCircle2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                    <span className="hidden sm:inline">Mark Complete</span>
+                    <span className="sm:hidden">Done</span>
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={handleNext}
                     disabled={currentStep >= recipe.ingredients.length - 1}
+                    className="text-xs sm:text-sm"
                   >
-                    Next
-                    <SkipForward className="w-4 h-4 ml-2" />
+                    <span className="hidden sm:inline">Next</span>
+                    <span className="sm:hidden">Next</span>
+                    <SkipForward className="w-3 h-3 sm:w-4 sm:h-4 ml-1 sm:ml-2" />
                   </Button>
                   {completedIngredients.size === recipe.ingredients.length && (
                     <Button
                       variant="default"
-                      className="bg-green-600 hover:bg-green-700"
+                      className="bg-green-600 hover:bg-green-700 text-xs sm:text-sm"
                       onClick={handleStartCooking}
                     >
-                      <Play className="w-4 h-4 mr-2" />
+                      <Play className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                       Start Cooking!
                     </Button>
                   )}
@@ -447,18 +453,22 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
                     size="sm"
                     onClick={handlePrevious}
                     disabled={currentStep === 0}
+                    className="text-xs sm:text-sm"
                   >
-                    <SkipBack className="w-4 h-4 mr-2" />
-                    Previous
+                    <SkipBack className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                    <span className="hidden sm:inline">Previous</span>
+                    <span className="sm:hidden">Prev</span>
                   </Button>
                   <Button
                     variant="default"
                     size="sm"
                     onClick={handleNext}
                     disabled={currentStep >= recipe.instructions.length - 1}
+                    className="text-xs sm:text-sm"
                   >
-                    Next Step
-                    <SkipForward className="w-4 h-4 ml-2" />
+                    <span className="hidden sm:inline">Next Step</span>
+                    <span className="sm:hidden">Next</span>
+                    <SkipForward className="w-3 h-3 sm:w-4 sm:h-4 ml-1 sm:ml-2" />
                   </Button>
                 </div>
               </CardContent>
@@ -468,13 +478,13 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
           {/* Ingredients Overview (during preparation) */}
           {phase === 'preparation' && (
             <Card>
-              <CardContent className="p-4">
-                <h4 className="font-medium mb-3">All Ingredients</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              <CardContent className="p-3 sm:p-4">
+                <h4 className="font-medium mb-3 text-sm sm:text-base">All Ingredients</h4>
+                <div className="grid grid-cols-1 gap-2">
                   {recipe.ingredients.map((ingredient, index) => (
                     <div
                       key={ingredient.id}
-                      className={`flex items-center justify-between p-2 rounded text-sm ${
+                      className={`flex items-center justify-between p-2 rounded text-xs sm:text-sm ${
                         index === currentStep
                           ? 'bg-primary/10 border border-primary/20'
                           : completedIngredients.has(ingredient.id)
@@ -482,11 +492,11 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
                           : 'bg-muted'
                       }`}
                     >
-                      <span>
+                      <span className="flex-1 pr-2">
                         {ingredient.amount} {ingredient.unit} {ingredient.name}
                       </span>
                       {completedIngredients.has(ingredient.id) && (
-                        <CheckCircle2 className="w-4 h-4 text-green-500" />
+                        <CheckCircle2 className="w-3 h-3 sm:w-4 sm:h-4 text-green-500 flex-shrink-0" />
                       )}
                     </div>
                   ))}
