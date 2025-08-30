@@ -310,7 +310,7 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
           <Card className="border-2 border-dashed border-primary/20">
             <CardContent className="p-4">
               <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 mr-4">
                   <Volume2 className="w-5 h-5 text-primary" />
                   <span className="font-medium">Voice Control</span>
                   {isListening && (
@@ -324,16 +324,18 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
                     variant={isListening ? "destructive" : "default"}
                     size="sm"
                     onClick={isListening ? toggleListening : startListening}
+                    className="px-3"
                   >
                     {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-                    {isListening ? "Stop" : "Start"} Voice
+                    <span className="ml-1">{isListening ? "Stop" : "Start"}</span>
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => setShowCommands(!showCommands)}
+                    className="px-3"
                   >
-                    Commands
+                    Help
                   </Button>
                 </div>
               </div>
