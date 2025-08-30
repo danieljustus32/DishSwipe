@@ -160,8 +160,8 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
       }
       setIsListening(false);
       setIsPaused(false);
-      setCurrentTutorial(null);
       setCurrentStep(0);
+      setCompletedIngredients(new Set());
     }
   }, [isOpen, recipe.title]);
 
