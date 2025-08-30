@@ -68,7 +68,7 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
   const [showCommands, setShowCommands] = useState(false);
   const [transcript, setTranscript] = useState('');
   
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const recognitionRef = useRef<any>(null);
   const synthRef = useRef<SpeechSynthesis | null>(null);
   const { toast } = useToast();
 
@@ -79,8 +79,8 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
   }, []);
 
   useEffect(() => {
-    if (isOpen && typeof window !== 'undefined' && 'webkitSpeechRecognition' in window) {
-      const SpeechRecognition = window.webkitSpeechRecognition || window.SpeechRecognition;
+    if (isOpen && typeof window !== 'undefined' && ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+      const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
       recognitionRef.current = new SpeechRecognition();
       
       if (recognitionRef.current) {
@@ -88,37 +88,52 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
         recognitionRef.current.interimResults = true;
         recognitionRef.current.lang = 'en-US';
 
-        recognitionRef.current.onresult = (event) => {
+        recognitionRef.current.onresult = (event: any) => {
           const result = event.results[event.results.length - 1];
           if (result.isFinal) {
             const command = result[0].transcript.toLowerCase().trim();
-            setTranscript(command);
-            console.log('Voice command received:', command);
-            handleVoiceCommand(command);
+            // Only process non-empty commands
+            if (command.length > 0) {
+              setTranscript(command);
+              console.log('Voice command received:', command);
+              handleVoiceCommand(command);
+            }
           }
         };
 
         recognitionRef.current.onend = () => {
           // Automatically restart recognition if it's supposed to be listening
+          console.log('Voice recognition ended. Current state - isListening:', isListening, 'isPaused:', isPaused);
           if (isListening && !isPaused) {
-            console.log('Voice recognition ended, restarting...');
+            console.log('Restarting voice recognition...');
             setTimeout(() => {
               if (recognitionRef.current && isListening && !isPaused) {
                 try {
                   recognitionRef.current.start();
+                  console.log('Voice recognition restarted successfully');
                 } catch (error) {
                   console.error('Error restarting speech recognition:', error);
+                  // If it fails to restart, try again after a longer delay
+                  setTimeout(() => {
+                    if (recognitionRef.current && isListening && !isPaused) {
+                      try {
+                        recognitionRef.current.start();
+                      } catch (retryError) {
+                        console.error('Retry failed:', retryError);
+                      }
+                    }
+                  }, 1000);
                 }
               }
-            }, 100);
+            }, 300);
           }
         };
 
-        recognitionRef.current.onerror = (event) => {
+        recognitionRef.current.onerror = (event: any) => {
           console.error('Speech recognition error:', event.error);
           
           // Only show toast for serious errors, not when it's just restarting
-          if (event.error !== 'aborted' && event.error !== 'no-speech') {
+          if (event.error !== 'aborted' && event.error !== 'no-speech' && event.error !== 'network') {
             toast({
               title: "Voice Recognition Error",
               description: "There was an issue with voice recognition. Try again.",
@@ -126,18 +141,8 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
             });
           }
           
-          // Try to restart if it's a recoverable error
-          if (event.error === 'no-speech' && isListening && !isPaused) {
-            setTimeout(() => {
-              if (recognitionRef.current && isListening && !isPaused) {
-                try {
-                  recognitionRef.current.start();
-                } catch (error) {
-                  console.error('Error restarting after no-speech:', error);
-                }
-              }
-            }, 500);
-          }
+          // Don't auto-restart on error - let the onend handler manage restarts
+          // This prevents restart loops from errors
         };
       }
     }
@@ -285,7 +290,7 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
   const handleCompleteIngredient = () => {
     if (phase === 'preparation') {
       const ingredientId = recipe.ingredients[currentStep].id;
-      setCompletedIngredients(prev => new Set([...prev, ingredientId]));
+      setCompletedIngredients(prev => new Set(Array.from(prev).concat([ingredientId])));
       speak("Ingredient marked as measured! Say 'next' for the next ingredient.");
     }
   };
