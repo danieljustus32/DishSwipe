@@ -98,13 +98,46 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
           }
         };
 
+        recognitionRef.current.onend = () => {
+          // Automatically restart recognition if it's supposed to be listening
+          if (isListening && !isPaused) {
+            console.log('Voice recognition ended, restarting...');
+            setTimeout(() => {
+              if (recognitionRef.current && isListening && !isPaused) {
+                try {
+                  recognitionRef.current.start();
+                } catch (error) {
+                  console.error('Error restarting speech recognition:', error);
+                }
+              }
+            }, 100);
+          }
+        };
+
         recognitionRef.current.onerror = (event) => {
           console.error('Speech recognition error:', event.error);
-          toast({
-            title: "Voice Recognition Error",
-            description: "There was an issue with voice recognition. Try again.",
-            variant: "destructive"
-          });
+          
+          // Only show toast for serious errors, not when it's just restarting
+          if (event.error !== 'aborted' && event.error !== 'no-speech') {
+            toast({
+              title: "Voice Recognition Error",
+              description: "There was an issue with voice recognition. Try again.",
+              variant: "destructive"
+            });
+          }
+          
+          // Try to restart if it's a recoverable error
+          if (event.error === 'no-speech' && isListening && !isPaused) {
+            setTimeout(() => {
+              if (recognitionRef.current && isListening && !isPaused) {
+                try {
+                  recognitionRef.current.start();
+                } catch (error) {
+                  console.error('Error restarting after no-speech:', error);
+                }
+              }
+            }, 500);
+          }
         };
       }
     }
@@ -112,6 +145,7 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
     return () => {
       if (recognitionRef.current) {
         recognitionRef.current.stop();
+        recognitionRef.current = null;
       }
     };
   }, [isOpen]);
@@ -119,6 +153,15 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
   useEffect(() => {
     if (isOpen) {
       speak("Welcome to hands-free cooking mode! I'll guide you through preparing " + recipe.title + ". Say 'help' to hear available commands.");
+    } else {
+      // Clean up when modal is closed
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+      setIsListening(false);
+      setIsPaused(false);
+      setCurrentTutorial(null);
+      setCurrentStep(0);
     }
   }, [isOpen, recipe.title]);
 
@@ -177,10 +220,19 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
       setIsPaused(true);
       speak("Voice recognition paused. Click the microphone to resume.");
     } else {
-      recognitionRef.current.start();
-      setIsListening(true);
-      setIsPaused(false);
-      speak("Voice recognition resumed.");
+      try {
+        recognitionRef.current.start();
+        setIsListening(true);
+        setIsPaused(false);
+        speak("Voice recognition resumed.");
+      } catch (error) {
+        console.error('Error starting speech recognition:', error);
+        toast({
+          title: "Voice Recognition Error",
+          description: "Could not start voice recognition. Please try again.",
+          variant: "destructive"
+        });
+      }
     }
   };
 
@@ -246,9 +298,18 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
 
   const startListening = () => {
     if (recognitionRef.current && !isListening) {
-      recognitionRef.current.start();
-      setIsListening(true);
-      setIsPaused(false);
+      try {
+        recognitionRef.current.start();
+        setIsListening(true);
+        setIsPaused(false);
+      } catch (error) {
+        console.error('Error starting speech recognition:', error);
+        toast({
+          title: "Voice Recognition Error",
+          description: "Could not start voice recognition. Please try again.",
+          variant: "destructive"
+        });
+      }
     }
   };
 
