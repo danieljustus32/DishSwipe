@@ -73,6 +73,7 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
   
   const recognitionRef = useRef<any>(null);
   const synthRef = useRef<SpeechSynthesis | null>(null);
+  const manuallyStoppedRef = useRef(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -143,8 +144,8 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
           // Check if we should restart based on current listening state
           setTimeout(() => {
             // Get current component state by checking the ref and state variables
-            const shouldContinueListening = isOpen && !isPaused && !manuallyStopped && recognitionRef.current;
-            console.log('Checking restart conditions - isOpen:', isOpen, 'isPaused:', isPaused, 'manuallyStopped:', manuallyStopped, 'hasRecognition:', !!recognitionRef.current, 'shouldRestart:', shouldContinueListening);
+            const shouldContinueListening = isOpen && !isPaused && !manuallyStoppedRef.current && recognitionRef.current;
+            console.log('Checking restart conditions - isOpen:', isOpen, 'isPaused:', isPaused, 'manuallyStopped:', manuallyStoppedRef.current, 'hasRecognition:', !!recognitionRef.current, 'shouldRestart:', shouldContinueListening);
             
             if (shouldContinueListening) {
               console.log('Restarting voice recognition...');
@@ -157,7 +158,7 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
                 console.error('Error restarting speech recognition:', error);
                 // If it fails to restart, try again after a longer delay
                 setTimeout(() => {
-                  if (recognitionRef.current && isOpen && !isPaused && !manuallyStopped) {
+                  if (recognitionRef.current && isOpen && !isPaused && !manuallyStoppedRef.current) {
                     try {
                       recognitionRef.current.start();
                       setIsListening(true);
@@ -213,6 +214,7 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
             setIsListening(true);
             setIsPaused(false);
             setManuallyStopped(false);
+            manuallyStoppedRef.current = false;
             console.log('Auto-started voice recognition on modal open');
           } catch (error) {
             console.error('Error auto-starting speech recognition:', error);
@@ -227,6 +229,7 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
       setIsListening(false);
       setIsPaused(false);
       setManuallyStopped(false);
+      manuallyStoppedRef.current = false;
       setCurrentStep(0);
       setCompletedIngredients(new Set());
     }
@@ -292,6 +295,7 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
 
     if (isListening) {
       console.log('Manually stopping voice recognition');
+      manuallyStoppedRef.current = true;
       recognitionRef.current.stop();
       setIsListening(false);
       setIsPaused(true);
@@ -299,6 +303,7 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
       speak("Voice recognition stopped. Click the microphone to restart.");
     } else {
       console.log('Manually starting voice recognition');
+      manuallyStoppedRef.current = false;
       try {
         recognitionRef.current.start();
         setIsListening(true);
