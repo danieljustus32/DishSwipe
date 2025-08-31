@@ -67,6 +67,8 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
   const [isPaused, setIsPaused] = useState(false);
   const [showCommands, setShowCommands] = useState(false);
   const [transcript, setTranscript] = useState('');
+  const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
+  const [selectedVoiceIndex, setSelectedVoiceIndex] = useState(0);
   
   const recognitionRef = useRef<any>(null);
   const synthRef = useRef<SpeechSynthesis | null>(null);
@@ -75,6 +77,34 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
   useEffect(() => {
     if (typeof window !== 'undefined') {
       synthRef.current = window.speechSynthesis;
+      
+      // Load available voices when synthesis is ready
+      const loadVoices = () => {
+        const voices = synthRef.current?.getVoices() || [];
+        const englishVoices = voices.filter(voice => voice.lang.startsWith('en'));
+        setAvailableVoices(englishVoices);
+        
+        // Auto-select the best voice on first load
+        const preferredVoices = englishVoices.filter(voice => 
+          voice.name.includes('Google') || 
+          voice.name.includes('Microsoft') || 
+          voice.name.includes('Samantha') ||
+          voice.name.includes('Alex') ||
+          voice.name.includes('Natural')
+        );
+        
+        if (preferredVoices.length > 0) {
+          const bestVoiceIndex = englishVoices.findIndex(v => v === preferredVoices[0]);
+          setSelectedVoiceIndex(bestVoiceIndex);
+        }
+      };
+      
+      // Voices might not be loaded immediately
+      if (synthRef.current?.getVoices().length > 0) {
+        loadVoices();
+      } else {
+        synthRef.current?.addEventListener('voiceschanged', loadVoices);
+      }
     }
   }, []);
 
@@ -113,7 +143,7 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
           setTimeout(() => {
             // Get current component state by checking the ref and state variables
             const shouldContinueListening = isOpen && !isPaused && recognitionRef.current;
-            console.log('Checking restart conditions - isOpen:', isOpen, 'isPaused:', isPaused, 'shouldRestart:', shouldContinueListening);
+            console.log('Checking restart conditions - isOpen:', isOpen, 'isPaused:', isPaused, 'hasRecognition:', !!recognitionRef.current, 'shouldRestart:', shouldContinueListening);
             
             if (shouldContinueListening) {
               console.log('Restarting voice recognition...');
@@ -203,9 +233,18 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
     if (synthRef.current && !isPaused) {
       synthRef.current.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 0.9;
-      utterance.pitch = 1;
-      utterance.volume = 0.8;
+      
+      // Use the selected voice if available
+      if (availableVoices.length > 0 && availableVoices[selectedVoiceIndex]) {
+        utterance.voice = availableVoices[selectedVoiceIndex];
+      }
+      
+      // Optimize speech parameters for naturalness
+      utterance.rate = 0.85; // Slightly slower for clarity
+      utterance.pitch = 0.95; // Slightly lower pitch for warmth
+      utterance.volume = 0.9; // Clear volume
+      
+      console.log('Using voice:', utterance.voice?.name || 'default');
       synthRef.current.speak(utterance);
     }
   };
