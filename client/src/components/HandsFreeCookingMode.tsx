@@ -68,8 +68,6 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
   const [manuallyStopped, setManuallyStopped] = useState(false);
   const [showCommands, setShowCommands] = useState(false);
   const [transcript, setTranscript] = useState('');
-  const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
-  const [selectedVoiceIndex, setSelectedVoiceIndex] = useState(0);
   
   const recognitionRef = useRef<any>(null);
   const synthRef = useRef<SpeechSynthesis | null>(null);
@@ -80,32 +78,7 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
     if (typeof window !== 'undefined') {
       synthRef.current = window.speechSynthesis;
       
-      // Load available voices when synthesis is ready
-      const loadVoices = () => {
-        const voices = synthRef.current?.getVoices() || [];
-        console.log('All available voices:', voices.map(v => `${v.name} (${v.lang}) - ${v.localService ? 'Local' : 'Remote'}`));
-        
-        const englishVoices = voices.filter(voice => voice.lang.startsWith('en'));
-        console.log('English voices:', englishVoices.map(v => `${v.name} (${v.lang}) - ${v.localService ? 'Local' : 'Remote'}`));
-        setAvailableVoices(englishVoices);
-        
-        // Select a random voice from available English voices
-        if (englishVoices.length > 0) {
-          const randomIndex = Math.floor(Math.random() * englishVoices.length);
-          const selectedVoice = englishVoices[randomIndex];
-          console.log('Randomly selected voice:', selectedVoice.name, 'from', englishVoices.length, 'available voices');
-          setSelectedVoiceIndex(randomIndex);
-        } else {
-          console.log('No English voices found, using default voice');
-        }
-      };
-      
-      // Voices might not be loaded immediately
-      if (synthRef.current?.getVoices().length > 0) {
-        loadVoices();
-      } else {
-        synthRef.current?.addEventListener('voiceschanged', loadVoices);
-      }
+      // Use system default voice - no need to load or select specific voices
     }
   }, []);
 
@@ -239,38 +212,12 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
       synthRef.current.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
       
-      console.log('Available voices count:', availableVoices.length);
-      console.log('Selected voice index:', selectedVoiceIndex);
-      
-      // Use the selected voice if available
-      if (availableVoices.length > 0 && availableVoices[selectedVoiceIndex]) {
-        utterance.voice = availableVoices[selectedVoiceIndex];
-        console.log('Selected voice details:', {
-          name: utterance.voice.name,
-          lang: utterance.voice.lang,
-          localService: utterance.voice.localService,
-          voiceURI: utterance.voice.voiceURI
-        });
-      } else {
-        console.log('No voice selected, using browser default');
-        
-        // Fallback: select a random English voice
-        const allVoices = synthRef.current.getVoices();
-        const englishVoices = allVoices.filter(voice => voice.lang.startsWith('en'));
-        
-        if (englishVoices.length > 0) {
-          const randomVoice = englishVoices[Math.floor(Math.random() * englishVoices.length)];
-          utterance.voice = randomVoice;
-          console.log('Random fallback voice selected:', randomVoice.name);
-        }
-      }
-      
+      // Use system default voice - no custom voice selection
       // Optimize speech parameters for naturalness
       utterance.rate = 0.85; // Slightly slower for clarity
       utterance.pitch = 0.95; // Slightly lower pitch for warmth
       utterance.volume = 0.9; // Clear volume
       
-      console.log('Speaking with voice:', utterance.voice?.name || 'browser default');
       synthRef.current.speak(utterance);
     }
   };
