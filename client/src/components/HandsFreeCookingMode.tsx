@@ -70,15 +70,15 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
   const [transcript, setTranscript] = useState('');
   
   const recognitionRef = useRef<any>(null);
-  const synthRef = useRef<SpeechSynthesis | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const manuallyStoppedRef = useRef(false);
   const { toast } = useToast();
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      synthRef.current = window.speechSynthesis;
-      
-      // Use system default voice - no need to load or select specific voices
+      // Create a single audio element for TTS playback
+      audioRef.current = new Audio();
+      audioRef.current.preload = 'auto';
     }
   }, []);
 
@@ -207,18 +207,53 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
     }
   }, [isOpen, recipe.title]);
 
-  const speak = (text: string) => {
-    if (synthRef.current && !isPaused) {
-      synthRef.current.cancel();
+  const speak = async (text: string) => {
+    if (!text || isPaused) return;
+    
+    try {
+      // Stop any currently playing audio
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+      }
+
+      console.log('Generating natural voice for:', text.substring(0, 50) + '...');
+      
+      // Call our TTS API endpoint
+      const response = await fetch('/api/voice/tts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ text }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`TTS API error: ${response.status}`);
+      }
+
+      // Get the audio data as a blob
+      const audioBlob = await response.blob();
+      const audioUrl = URL.createObjectURL(audioBlob);
+
+      // Play the audio
+      if (audioRef.current) {
+        audioRef.current.src = audioUrl;
+        await audioRef.current.play();
+        
+        // Clean up the blob URL after playing
+        audioRef.current.onended = () => {
+          URL.revokeObjectURL(audioUrl);
+        };
+      }
+    } catch (error) {
+      console.error('TTS error:', error);
+      // Fallback to browser speech synthesis on error
       const utterance = new SpeechSynthesisUtterance(text);
-      
-      // Use system default voice - no custom voice selection
-      // Optimize speech parameters for naturalness
-      utterance.rate = 0.85; // Slightly slower for clarity
-      utterance.pitch = 0.95; // Slightly lower pitch for warmth
-      utterance.volume = 0.9; // Clear volume
-      
-      synthRef.current.speak(utterance);
+      utterance.rate = 0.85;
+      utterance.pitch = 0.95;
+      utterance.volume = 0.9;
+      window.speechSynthesis.speak(utterance);
     }
   };
 
