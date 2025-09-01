@@ -12,6 +12,7 @@ import { storage } from "./storage";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import jwt from "jsonwebtoken";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -255,18 +256,37 @@ export async function setupAuth(app: Express) {
       async (req: any, accessToken: any, refreshToken: any, idToken: any, profile: any, done: any) => {
         try {
           console.log("=== APPLE AUTHENTICATION CALLBACK TRIGGERED ===");
+          console.log("Access Token:", accessToken ? "Present" : "Missing");
+          console.log("Refresh Token:", refreshToken ? "Present" : "Missing");
           console.log("ID Token:", idToken ? "Present" : "Missing");
           console.log("Profile received:", JSON.stringify(profile, null, 2));
           
-          // Apple's profile structure is different - they provide minimal info
-          const appleProfile = {
-            id: profile.sub || profile.id,
-            sub: profile.sub || profile.id,
-            email: profile.email,
-            name: profile.name || {},
-            given_name: profile.given_name,
-            family_name: profile.family_name
-          };
+          // For Apple, the profile info is actually in the ID token
+          let appleProfile;
+          if (idToken) {
+            // Decode the ID token to get user info
+            const decoded = jwt.decode(idToken);
+            console.log("Decoded ID Token:", JSON.stringify(decoded, null, 2));
+            
+            appleProfile = {
+              id: decoded.sub,
+              sub: decoded.sub,
+              email: decoded.email,
+              name: {},
+              given_name: decoded.given_name,
+              family_name: decoded.family_name
+            };
+          } else {
+            // Fallback to profile object
+            appleProfile = {
+              id: profile.sub || profile.id,
+              sub: profile.sub || profile.id,
+              email: profile.email,
+              name: profile.name || {},
+              given_name: profile.given_name,
+              family_name: profile.family_name
+            };
+          }
           
           console.log("Normalized Apple profile:", JSON.stringify(appleProfile, null, 2));
           
