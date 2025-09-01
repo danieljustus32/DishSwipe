@@ -242,15 +242,11 @@ export async function setupAuth(app: Express) {
       console.log("Final private key length:", privateKey.length);
       console.log("Private key validation: PASSED");
       
-      // Write private key to temporary file since passport-apple expects a file path
-      const tempKeyPath = path.join(__dirname, 'apple_private_key.p8');
-      fs.writeFileSync(tempKeyPath, privateKey);
-      
       passport.use('apple', new AppleStrategy({
         clientID: process.env.APPLE_CLIENT_ID,
         teamID: process.env.APPLE_TEAM_ID,
-        keyIdentifier: process.env.APPLE_KEY_ID,
-        privateKeyPath: tempKeyPath,
+        keyID: process.env.APPLE_KEY_ID,
+        privateKeyString: privateKey,
         callbackURL: "https://feastly.replit.app/api/callback/apple",
         scope: ['name', 'email'],
         response_mode: 'form_post',
