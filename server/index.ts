@@ -4,7 +4,19 @@ import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
 app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use(express.urlencoded({ extended: true })); // Changed to true for Apple form_post
+
+// Add specific debugging for Apple callback
+app.use('/api/callback/apple', (req, res, next) => {
+  console.log("=== RAW APPLE CALLBACK REQUEST ===");
+  console.log("Method:", req.method);
+  console.log("URL:", req.url);
+  console.log("Headers:", JSON.stringify(req.headers, null, 2));
+  console.log("Body:", JSON.stringify(req.body, null, 2));
+  console.log("Query:", JSON.stringify(req.query, null, 2));
+  console.log("=== END RAW REQUEST ===");
+  next();
+});
 
 app.use((req, res, next) => {
   const start = Date.now();
