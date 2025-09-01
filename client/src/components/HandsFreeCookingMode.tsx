@@ -229,6 +229,31 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
       });
 
       if (!response.ok) {
+        if (response.status === 429) {
+          // Rate limited - wait and retry once
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          const retryResponse = await fetch('/api/voice/tts', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ text }),
+          });
+          
+          if (!retryResponse.ok) {
+            throw new Error('TTS service temporarily unavailable');
+          }
+          
+          const retryBlob = await retryResponse.blob();
+          const retryUrl = URL.createObjectURL(retryBlob);
+          
+          if (audioRef.current) {
+            audioRef.current.src = retryUrl;
+            await audioRef.current.play();
+            audioRef.current.onended = () => URL.revokeObjectURL(retryUrl);
+          }
+          return;
+        }
         throw new Error(`TTS API error: ${response.status}`);
       }
 
@@ -249,11 +274,13 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
     } catch (error) {
       console.error('TTS error:', error);
       // Fallback to browser speech synthesis on error
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 0.85;
-      utterance.pitch = 0.95;
-      utterance.volume = 0.9;
-      window.speechSynthesis.speak(utterance);
+      if (typeof window !== 'undefined' && window.speechSynthesis) {
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 0.85;
+        utterance.pitch = 0.95;
+        utterance.volume = 0.9;
+        window.speechSynthesis.speak(utterance);
+      }
     }
   };
 

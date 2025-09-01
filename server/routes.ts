@@ -689,6 +689,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ received: true });
   });
 
+  // Simple rate limiting for TTS requests
+  const ttsRateLimit = new Map();
+  
   // Text-to-speech endpoint using OpenAI TTS
   app.post('/api/voice/tts', async (req, res) => {
     try {
@@ -697,6 +700,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!text) {
         return res.status(400).json({ error: 'Text is required' });
       }
+
+      // Simple rate limiting: max 1 request per second per IP
+      const clientIP = req.ip || 'unknown';
+      const now = Date.now();
+      const lastRequest = ttsRateLimit.get(clientIP);
+      
+      if (lastRequest && (now - lastRequest) < 1000) {
+        return res.status(429).json({ error: 'Rate limit: Please wait 1 second between requests' });
+      }
+      
+      ttsRateLimit.set(clientIP, now);
 
       const openaiResponse = await fetch('https://api.openai.com/v1/audio/speech', {
         method: 'POST',
@@ -707,13 +721,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         body: JSON.stringify({
           model: 'tts-1',
           voice: 'nova', // Natural female voice, good for cooking instructions
-          input: text,
+          input: text.substring(0, 4000), // Limit text length to prevent excessive costs
           response_format: 'mp3',
           speed: 0.9 // Slightly slower for clarity
         }),
       });
 
       if (!openaiResponse.ok) {
+        if (openaiResponse.status === 429) {
+          return res.status(429).json({ error: 'OpenAI rate limit exceeded - please wait a moment' });
+        }
         throw new Error(`OpenAI TTS API error: ${openaiResponse.status}`);
       }
 
