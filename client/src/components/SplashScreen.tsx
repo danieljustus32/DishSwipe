@@ -19,9 +19,9 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
   }, [onComplete]);
 
   return (
-    <div 
+    <div
       className={`fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-orange-400 via-red-400 to-pink-500 transition-opacity duration-300 ${
-        isVisible ? 'opacity-100' : 'opacity-0'
+        isVisible ? "opacity-100" : "opacity-0"
       }`}
     >
       <div className="text-center text-white">
@@ -30,19 +30,14 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
           <div className="animate-bounce">
             <ChefHat className="w-20 h-20 mx-auto mb-4" />
           </div>
-          <div className="absolute -top-2 -right-2 animate-pulse">
-            <Sparkles className="w-8 h-8 text-yellow-300" />
-          </div>
         </div>
 
         {/* App Name */}
-        <h1 className="text-4xl font-bold mb-2 animate-fade-in">
-          FlavorSwipe
-        </h1>
-        
+        <h1 className="text-4xl font-bold mb-2 animate-fade-in">Feastly</h1>
+
         {/* Tagline */}
         <p className="text-lg opacity-90 animate-fade-in-delay">
-          Discover your next favorite recipe
+          Discover your next favorite meal
         </p>
 
         {/* Loading Animation */}

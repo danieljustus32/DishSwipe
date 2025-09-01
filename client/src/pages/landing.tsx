@@ -2,8 +2,24 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Heart, Search, ShoppingCart } from "lucide-react";
 import { SiGoogle, SiApple } from "react-icons/si";
+import { useQuery } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
 
 export default function Landing() {
+  const [availableProviders, setAvailableProviders] = useState<string[]>([]);
+
+  // Fetch available authentication providers
+  const { data: providersData } = useQuery({
+    queryKey: ["/api/auth/providers"],
+    retry: false,
+  });
+
+  useEffect(() => {
+    if (providersData?.providers) {
+      setAvailableProviders(providersData.providers);
+    }
+  }, [providersData]);
+
   const handleLogin = (provider?: string) => {
     const baseUrl = provider ? `/api/login/${provider}` : "/api/login";
     window.location.href = baseUrl;
@@ -75,31 +91,35 @@ export default function Landing() {
               <p className="text-sm text-muted-foreground mb-4">Sign in to get started</p>
             </div>
             
-            {/* Google Sign In */}
-            <Button 
-              onClick={() => handleLogin('google')}
-              variant="outline"
-              className="w-full flex items-center justify-center gap-3 py-3 text-base font-medium border-2 hover:bg-gray-50"
-              size="lg"
-              data-testid="button-google-login"
-            >
-              <SiGoogle className="w-5 h-5 text-[#4285F4]" />
-              Continue with Google
-            </Button>
+            {/* Google Sign In - Only show if available */}
+            {availableProviders.includes('google') && (
+              <Button 
+                onClick={() => handleLogin('google')}
+                variant="outline"
+                className="w-full flex items-center justify-center gap-3 py-3 text-base font-medium border-2 hover:bg-gray-50"
+                size="lg"
+                data-testid="button-google-login"
+              >
+                <SiGoogle className="w-5 h-5 text-[#4285F4]" />
+                Continue with Google
+              </Button>
+            )}
 
-            {/* Apple Sign In */}
-            <Button 
-              onClick={() => handleLogin('apple')}
-              variant="outline"
-              className="w-full flex items-center justify-center gap-3 py-3 text-base font-medium border-2 hover:bg-gray-50"
-              size="lg"
-              data-testid="button-apple-login"
-            >
-              <SiApple className="w-5 h-5" />
-              Continue with Apple
-            </Button>
+            {/* Apple Sign In - Only show if available */}
+            {availableProviders.includes('apple') && (
+              <Button 
+                onClick={() => handleLogin('apple')}
+                variant="outline"
+                className="w-full flex items-center justify-center gap-3 py-3 text-base font-medium border-2 hover:bg-gray-50"
+                size="lg"
+                data-testid="button-apple-login"
+              >
+                <SiApple className="w-5 h-5" />
+                Continue with Apple
+              </Button>
+            )}
 
-            {/* Replit Sign In (Default) */}
+            {/* Replit Sign In (Always available) */}
             <Button 
               onClick={() => handleLogin()}
               className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-3 text-base font-semibold"

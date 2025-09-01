@@ -258,6 +258,23 @@ export async function setupAuth(app: Express) {
     })
   );
 
+  // API route to get available auth providers
+  app.get("/api/auth/providers", (req, res) => {
+    const providers = ["replit"]; // Replit is always available
+    
+    // Check if Google OAuth is configured
+    if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+      providers.push("google");
+    }
+    
+    // Check if Apple OAuth is configured
+    if (process.env.APPLE_CLIENT_ID && process.env.APPLE_TEAM_ID && process.env.APPLE_KEY_ID && process.env.APPLE_PRIVATE_KEY) {
+      providers.push("apple");
+    }
+    
+    res.json({ providers });
+  });
+
   // Generic login route (defaults to Replit for backward compatibility)
   app.get("/api/login", (req, res, next) => {
     passport.authenticate(`replitauth:${req.hostname}`, {
