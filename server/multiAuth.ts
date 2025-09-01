@@ -224,29 +224,39 @@ export async function setupAuth(app: Express) {
       console.log("Formatted private key preview:", privateKey.substring(0, 100) + "...");
       console.log("Private key ends with:", privateKey.slice(-40));
       
-      passport.use(new AppleStrategy({
+      passport.use('apple', new AppleStrategy({
         clientID: process.env.APPLE_CLIENT_ID,
         teamID: process.env.APPLE_TEAM_ID,
         keyID: process.env.APPLE_KEY_ID,
         key: privateKey,
         callbackURL: "https://feastly.replit.app/api/callback/apple",
         scope: ['name', 'email'],
+        response_mode: 'form_post',
         passReqToCallback: false
       } as any,
-      async (accessToken: any, refreshToken: any, idToken: any, profile: any, done: any) => {
+      async (idToken: any, profile: any, done: any) => {
         try {
           console.log("=== APPLE AUTHENTICATION CALLBACK TRIGGERED ===");
-          console.log("Access Token:", accessToken ? "Present" : "Missing");
-          console.log("Refresh Token:", refreshToken ? "Present" : "Missing");
           console.log("ID Token:", idToken ? "Present" : "Missing");
           console.log("Profile received:", JSON.stringify(profile, null, 2));
           
-          await upsertUserFromProvider(profile, 'apple');
+          // Apple's profile structure is different - they provide minimal info
+          const appleProfile = {
+            id: profile.sub || profile.id,
+            sub: profile.sub || profile.id,
+            email: profile.email,
+            name: profile.name || {},
+            given_name: profile.given_name,
+            family_name: profile.family_name
+          };
+          
+          console.log("Normalized Apple profile:", JSON.stringify(appleProfile, null, 2));
+          
+          await upsertUserFromProvider(appleProfile, 'apple');
           return done(null, { 
             provider: 'apple', 
-            profile,
-            access_token: accessToken,
-            refresh_token: refreshToken 
+            profile: appleProfile,
+            id_token: idToken
           });
         } catch (error) {
           console.error("=== ERROR IN APPLE AUTHENTICATION CALLBACK ===");
