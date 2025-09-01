@@ -290,6 +290,7 @@ export async function setupAuth(app: Express) {
       console.log("Apple Strategy configured successfully");
     } catch (error) {
       console.error("Failed to configure Apple Strategy:", error);
+      console.error("Error stack:", error.stack);
     }
   } else {
     console.log("Apple OAuth not configured - missing environment variables");
@@ -337,12 +338,12 @@ export async function setupAuth(app: Express) {
     const strategy = passport._strategy('apple');
     console.log("Apple strategy available:", !!strategy);
     
-    passport.authenticate("apple", (err) => {
-      if (err) {
-        console.error("Apple login error:", err);
-        return res.status(500).json({ error: "Apple login failed", details: err.message });
-      }
-    })(req, res, next);
+    try {
+      passport.authenticate("apple")(req, res, next);
+    } catch (error) {
+      console.error("Apple login error:", error);
+      res.status(500).json({ error: "Apple login failed", details: error.message });
+    }
   });
 
   // Apple uses form_post response mode, so it sends POST requests to the callback
