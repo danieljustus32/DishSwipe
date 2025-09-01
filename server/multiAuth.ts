@@ -198,11 +198,21 @@ export async function setupAuth(app: Express) {
       console.log("- Key ID:", process.env.APPLE_KEY_ID);
       console.log("- Private Key length:", process.env.APPLE_PRIVATE_KEY.length);
       
+      // Ensure private key is properly formatted
+      let privateKey = process.env.APPLE_PRIVATE_KEY;
+      if (!privateKey.includes('\n')) {
+        // If the key doesn't have line breaks, add them
+        privateKey = privateKey.replace(/-----BEGIN PRIVATE KEY-----/, '-----BEGIN PRIVATE KEY-----\n')
+                              .replace(/-----END PRIVATE KEY-----/, '\n-----END PRIVATE KEY-----')
+                              .replace(/(.{64})/g, '$1\n')
+                              .replace(/\n\n/g, '\n');
+      }
+      
       passport.use(new AppleStrategy({
         clientID: process.env.APPLE_CLIENT_ID,
         teamID: process.env.APPLE_TEAM_ID,
         keyID: process.env.APPLE_KEY_ID,
-        key: process.env.APPLE_PRIVATE_KEY,
+        key: privateKey,
         callbackURL: "https://feastly.replit.app/api/callback/apple",
         scope: ['name', 'email'],
         passReqToCallback: false
