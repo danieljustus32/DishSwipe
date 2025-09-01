@@ -250,9 +250,9 @@ export async function setupAuth(app: Express) {
         callbackURL: "https://feastly.replit.app/api/callback/apple",
         scope: ['name', 'email'],
         response_mode: 'form_post',
-        passReqToCallback: false
+        passReqToCallback: true
       } as any,
-      async (idToken: any, profile: any, done: any) => {
+      async (req: any, accessToken: any, refreshToken: any, idToken: any, profile: any, done: any) => {
         try {
           console.log("=== APPLE AUTHENTICATION CALLBACK TRIGGERED ===");
           console.log("ID Token:", idToken ? "Present" : "Missing");
