@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import Stripe from "stripe";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated } from "./replitAuth";
+import { setupAuth, isAuthenticated } from "./multiAuth";
 import { 
   insertRecipeSchema,
   insertUserRecipeSchema,
@@ -156,7 +156,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      let userId: string;
+      
+      if (req.user.claims?.sub) {
+        // Replit OIDC user
+        userId = req.user.claims.sub;
+      } else if (req.user.provider && req.user.profile) {
+        // Google or Apple user
+        const provider = req.user.provider;
+        const profile = req.user.profile;
+        
+        const providerId = provider === 'google' ? profile.id : 
+                          provider === 'apple' ? (profile.id || profile.sub) : null;
+        
+        if (providerId) {
+          const user = await storage.getUserByProviderId(providerId, provider);
+          if (user) {
+            return res.json(user);
+          }
+        }
+        throw new Error(`User not found for ${provider} provider`);
+      } else {
+        throw new Error("Invalid user session");
+      }
+      
       const user = await storage.getUser(userId);
       res.json(user);
     } catch (error) {

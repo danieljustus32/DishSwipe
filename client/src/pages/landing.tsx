@@ -1,10 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Heart, Search, ShoppingCart } from "lucide-react";
+import { SiGoogle, SiApple } from "react-icons/si";
 
 export default function Landing() {
-  const handleLogin = () => {
-    window.location.href = "/api/login";
+  const handleLogin = (provider?: string) => {
+    const baseUrl = provider ? `/api/login/${provider}` : "/api/login";
+    window.location.href = baseUrl;
   };
 
   return (
@@ -67,14 +69,44 @@ export default function Landing() {
             </Card>
           </div>
 
-          {/* CTA Button */}
-          <div className="pt-6">
+          {/* CTA Buttons */}
+          <div className="pt-6 space-y-4">
+            <div className="text-center">
+              <p className="text-sm text-muted-foreground mb-4">Sign in to get started</p>
+            </div>
+            
+            {/* Google Sign In */}
             <Button 
-              onClick={handleLogin}
-              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-3 text-lg font-semibold"
+              onClick={() => handleLogin('google')}
+              variant="outline"
+              className="w-full flex items-center justify-center gap-3 py-3 text-base font-medium border-2 hover:bg-gray-50"
               size="lg"
+              data-testid="button-google-login"
             >
-              Get Started
+              <SiGoogle className="w-5 h-5 text-[#4285F4]" />
+              Continue with Google
+            </Button>
+
+            {/* Apple Sign In */}
+            <Button 
+              onClick={() => handleLogin('apple')}
+              variant="outline"
+              className="w-full flex items-center justify-center gap-3 py-3 text-base font-medium border-2 hover:bg-gray-50"
+              size="lg"
+              data-testid="button-apple-login"
+            >
+              <SiApple className="w-5 h-5" />
+              Continue with Apple
+            </Button>
+
+            {/* Replit Sign In (Default) */}
+            <Button 
+              onClick={() => handleLogin()}
+              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-3 text-base font-semibold"
+              size="lg"
+              data-testid="button-replit-login"
+            >
+              Continue with Replit
             </Button>
           </div>
         </div>

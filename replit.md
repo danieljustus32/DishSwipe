@@ -74,7 +74,7 @@ The application follows a monorepo structure with clear separation between clien
 
 ## Data Flow
 
-1. **Authentication**: Replit OIDC → Passport.js → PostgreSQL sessions
+1. **Authentication**: Multiple providers (Replit OIDC, Google OAuth, Apple OAuth) → Passport.js → PostgreSQL sessions
 2. **Recipe Data**: Spoonacular API → Backend cache → Frontend display
 3. **User Preferences**: Frontend swipes → Backend storage → Future recommendations
 4. **Cookbook**: User saves → PostgreSQL → Frontend cookbook view
@@ -85,7 +85,7 @@ The application follows a monorepo structure with clear separation between clien
 ### Required Services
 - **Spoonacular API**: Recipe data source (requires API key)
 - **Neon Database**: PostgreSQL hosting (serverless)
-- **Replit Authentication**: OIDC provider for user management
+- **Authentication Providers**: Multiple OAuth providers supported
 
 ### Environment Variables
 - `DATABASE_URL`: PostgreSQL connection string
@@ -94,6 +94,17 @@ The application follows a monorepo structure with clear separation between clien
 - `REPLIT_DOMAINS`: Authorized domains for OIDC
 - `ISSUER_URL`: OIDC issuer URL (defaults to Replit)
 - `VITE_TUTORIAL_TESTING`: Set to 'true' to show tutorial on every app run for testing purposes (default: show only to first-time users)
+
+#### Optional OAuth Provider Credentials
+**Google OAuth (optional):**
+- `GOOGLE_CLIENT_ID`: Google OAuth 2.0 client ID
+- `GOOGLE_CLIENT_SECRET`: Google OAuth 2.0 client secret
+
+**Apple OAuth (optional):**
+- `APPLE_CLIENT_ID`: Apple Sign In service ID
+- `APPLE_TEAM_ID`: Apple Developer Team ID
+- `APPLE_KEY_ID`: Apple Sign In key ID
+- `APPLE_PRIVATE_KEY`: Apple Sign In private key (PEM format)
 
 ### Key Libraries
 - **@neondatabase/serverless**: PostgreSQL client optimized for serverless
@@ -124,6 +135,16 @@ The application follows a monorepo structure with clear separation between clien
 The application is designed to run seamlessly on Replit with minimal configuration, while maintaining the flexibility to deploy on other platforms with appropriate environment variable configuration.
 
 ## Recent Changes
+
+**September 1, 2025**
+- ✓ Added Google and Apple authentication providers for user sign-in options
+- ✓ Updated user schema to support multiple authentication providers (Google ID, Apple ID, Replit ID fields)
+- ✓ Enhanced authentication system with provider-specific user verification and account linking
+- ✓ Created comprehensive multiAuth system supporting Replit OIDC, Google OAuth, and Apple OAuth
+- ✓ Updated landing page to display multiple sign-in options with provider-specific branding
+- ✓ Added new storage methods for user lookup by provider ID and email-based account linking
+- ✓ Enhanced session management to handle different provider token structures
+- ✓ Updated database schema with new authentication provider fields and constraints
 
 **January 31, 2025**
 - ✓ Completed comprehensive onboarding tutorial system with tab-specific triggering

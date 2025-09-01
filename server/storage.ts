@@ -24,6 +24,8 @@ import { eq, and, desc, inArray } from "drizzle-orm";
 export interface IStorage {
   // User operations (mandatory for Replit Auth)
   getUser(id: string): Promise<User | undefined>;
+  getUserByProviderId(providerId: string, provider: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
   updateUserProfile(userId: string, profileData: { firstName: string; lastName: string; email: string }): Promise<User>;
   
@@ -65,6 +67,31 @@ export class DatabaseStorage implements IStorage {
   // User operations
   async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
+  }
+
+  async getUserByProviderId(providerId: string, provider: string): Promise<User | undefined> {
+    let whereClause;
+    switch (provider) {
+      case 'google':
+        whereClause = eq(users.googleId, providerId);
+        break;
+      case 'apple':
+        whereClause = eq(users.appleId, providerId);
+        break;
+      case 'replit':
+        whereClause = eq(users.replitId, providerId);
+        break;
+      default:
+        return undefined;
+    }
+    
+    const [user] = await db.select().from(users).where(whereClause);
+    return user;
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
     return user;
   }
 

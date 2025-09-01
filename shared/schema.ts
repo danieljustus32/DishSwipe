@@ -31,6 +31,12 @@ export const users = pgTable("users", {
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
+  // Authentication provider fields
+  authProvider: varchar("auth_provider").default("replit"), // 'replit', 'google', 'apple'
+  googleId: varchar("google_id"),
+  appleId: varchar("apple_id"),
+  replitId: varchar("replit_id"),
+  // Stripe fields
   stripeCustomerId: varchar("stripe_customer_id"),
   stripeSubscriptionId: varchar("stripe_subscription_id"),
   isGoldMember: boolean("is_gold_member").default(false),
