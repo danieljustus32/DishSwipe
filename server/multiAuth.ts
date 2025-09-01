@@ -210,12 +210,19 @@ export async function setupAuth(app: Express) {
         const keyContent = match[1];
         // Properly format with line breaks every 64 characters
         const formattedContent = keyContent.match(/.{1,64}/g)?.join('\n') || keyContent;
+        // Ensure no trailing spaces and proper line endings
         privateKey = `-----BEGIN PRIVATE KEY-----\n${formattedContent}\n-----END PRIVATE KEY-----`;
+        
+        // Double check for any trailing spaces and remove them
+        privateKey = privateKey.replace(/ +\n/g, '\n');
+        privateKey = privateKey.replace(/ +-----END/g, '\n-----END');
+        
       } else {
         console.error("Invalid Apple private key format");
       }
       
       console.log("Formatted private key preview:", privateKey.substring(0, 100) + "...");
+      console.log("Private key ends with:", privateKey.slice(-40));
       
       passport.use(new AppleStrategy({
         clientID: process.env.APPLE_CLIENT_ID,
