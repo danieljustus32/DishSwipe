@@ -68,10 +68,13 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
   const [manuallyStopped, setManuallyStopped] = useState(false);
   const [showCommands, setShowCommands] = useState(false);
   const [transcript, setTranscript] = useState('');
+  const [isSpeaking, setIsSpeaking] = useState(false);
   
   const recognitionRef = useRef<any>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const manuallyStoppedRef = useRef(false);
+  const speechQueueRef = useRef<string[]>([]);
+  const isProcessingQueueRef = useRef(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -200,14 +203,41 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
       setIsListening(false);
       setIsPaused(false);
       setManuallyStopped(false);
+      setIsSpeaking(false);
       manuallyStoppedRef.current = false;
       setCurrentStep(0);
       setCompletedIngredients(new Set());
+      setPhase('preparation');
+      
+      // Clear speech queue
+      speechQueueRef.current = [];
+      isProcessingQueueRef.current = false;
+      
+      // Stop any playing audio
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+      }
     }
   }, [isOpen, recipe.title]);
 
   const speak = async (text: string) => {
     if (!text || isPaused) return;
+    
+    // Add to queue instead of interrupting current speech
+    speechQueueRef.current.push(text);
+    
+    // Process queue if not already processing
+    if (!isProcessingQueueRef.current) {
+      processQueuedSpeech();
+    }
+  };
+
+  const processQueuedSpeech = async () => {
+    if (isProcessingQueueRef.current || speechQueueRef.current.length === 0) return;
+    
+    isProcessingQueueRef.current = true;
+    setIsSpeaking(true);
     
     try {
       // Temporarily pause voice recognition during TTS to prevent feedback
@@ -217,80 +247,81 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
         setIsListening(false);
       }
 
-      // Stop any currently playing audio
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.currentTime = 0;
-      }
-
-      console.log('Generating natural voice for:', text.substring(0, 50) + '...');
-      
-      // Call our TTS API endpoint
-      const response = await fetch('/api/voice/tts', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ text }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`TTS API error: ${response.status}`);
-      }
-
-      // Get the audio data as a blob
-      const audioBlob = await response.blob();
-      const audioUrl = URL.createObjectURL(audioBlob);
-
-      // Play the audio
-      if (audioRef.current) {
-        audioRef.current.src = audioUrl;
-        await audioRef.current.play();
+      while (speechQueueRef.current.length > 0) {
+        const text = speechQueueRef.current.shift()!;
         
-        // Clean up the blob URL after playing and restart voice recognition
-        audioRef.current.onended = () => {
-          URL.revokeObjectURL(audioUrl);
+        console.log('Generating natural voice for:', text.substring(0, 50) + '...');
+        
+        try {
+          // Call our TTS API endpoint
+          const response = await fetch('/api/voice/tts', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ text }),
+          });
+
+          if (!response.ok) {
+            throw new Error(`TTS API error: ${response.status}`);
+          }
+
+          // Get the audio data as a blob
+          const audioBlob = await response.blob();
+          const audioUrl = URL.createObjectURL(audioBlob);
+
+          // Play the audio and wait for it to finish
+          await new Promise<void>((resolve, reject) => {
+            if (audioRef.current) {
+              audioRef.current.src = audioUrl;
+              audioRef.current.onended = () => {
+                URL.revokeObjectURL(audioUrl);
+                resolve();
+              };
+              audioRef.current.onerror = () => {
+                URL.revokeObjectURL(audioUrl);
+                reject(new Error('Audio playback failed'));
+              };
+              audioRef.current.play().catch(reject);
+            } else {
+              reject(new Error('Audio element not available'));
+            }
+          });
+        } catch (error) {
+          console.error('TTS error:', error);
           
-          // Restart voice recognition after TTS finishes
-          if (wasListening && recognitionRef.current && isOpen && !isPaused && !manuallyStoppedRef.current) {
-            setTimeout(() => {
-              try {
-                recognitionRef.current.start();
-                setIsListening(true);
-                console.log('Voice recognition restarted after TTS');
-              } catch (error) {
-                console.error('Error restarting recognition after TTS:', error);
-              }
-            }, 500); // Small delay to ensure audio has fully stopped
-          }
-        };
+          // Fallback to browser speech synthesis on error
+          await new Promise<void>((resolve) => {
+            if (typeof window !== 'undefined' && window.speechSynthesis) {
+              const utterance = new SpeechSynthesisUtterance(text);
+              utterance.rate = 0.85;
+              utterance.pitch = 0.95;
+              utterance.volume = 0.9;
+              utterance.onend = () => resolve();
+              utterance.onerror = () => resolve(); // Resolve even on error to continue
+              window.speechSynthesis.speak(utterance);
+            } else {
+              resolve();
+            }
+          });
+        }
       }
-    } catch (error) {
-      console.error('TTS error:', error);
-      // Fallback to browser speech synthesis on error
-      if (typeof window !== 'undefined' && window.speechSynthesis) {
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.rate = 0.85;
-        utterance.pitch = 0.95;
-        utterance.volume = 0.9;
-        window.speechSynthesis.speak(utterance);
-        
-        // Also restart voice recognition after fallback TTS
-        const wasListening = isListening;
-        utterance.onend = () => {
-          if (wasListening && recognitionRef.current && isOpen && !isPaused && !manuallyStoppedRef.current) {
-            setTimeout(() => {
-              try {
-                recognitionRef.current.start();
-                setIsListening(true);
-                console.log('Voice recognition restarted after fallback TTS');
-              } catch (error) {
-                console.error('Error restarting recognition after fallback TTS:', error);
-              }
-            }, 500);
+      
+      // Restart voice recognition after all speech is finished
+      if (wasListening && recognitionRef.current && isOpen && !isPaused && !manuallyStoppedRef.current) {
+        setTimeout(() => {
+          try {
+            recognitionRef.current.start();
+            setIsListening(true);
+            console.log('Voice recognition restarted after TTS queue completed');
+          } catch (error) {
+            console.error('Error restarting recognition after TTS:', error);
           }
-        };
+        }, 500); // Small delay to ensure audio has fully stopped
       }
+    } finally {
+      isProcessingQueueRef.current = false;
+      setIsSpeaking(false);
     }
   };
 
@@ -365,8 +396,12 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
   };
 
   const handleNext = () => {
+    console.log('handleNext called - current phase:', phase, 'current step:', currentStep);
+    
     if (phase === 'preparation') {
       const nextStep = currentStep + 1;
+      console.log('Preparation phase - next step would be:', nextStep, 'total ingredients:', recipe.ingredients.length);
+      
       if (nextStep < recipe.ingredients.length) {
         setCurrentStep(nextStep);
         const ingredient = recipe.ingredients[nextStep];
@@ -376,6 +411,8 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
       }
     } else {
       const nextStep = currentStep + 1;
+      console.log('Cooking phase - next step would be:', nextStep, 'total instructions:', recipe.instructions.length);
+      
       if (nextStep < recipe.instructions.length) {
         setCurrentStep(nextStep);
         speak(`Step ${nextStep + 1}: ${recipe.instructions[nextStep]}`);
@@ -419,6 +456,7 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
   };
 
   const handleStartCooking = () => {
+    console.log('Starting cooking phase - transitioning from preparation');
     setPhase('cooking');
     setCurrentStep(0);
     speak(`Starting cooking phase! Step 1: ${recipe.instructions[0]}`);
@@ -506,6 +544,11 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
                   {isListening && (
                     <Badge variant="secondary" className="animate-pulse">
                       Listening...
+                    </Badge>
+                  )}
+                  {isSpeaking && (
+                    <Badge variant="outline" className="animate-pulse">
+                      Speaking...
                     </Badge>
                   )}
                 </div>
