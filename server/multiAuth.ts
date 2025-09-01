@@ -9,6 +9,12 @@ import type { Express, RequestHandler } from "express";
 import memoize from "memoizee";
 import connectPg from "connect-pg-simple";
 import { storage } from "./storage";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 if (!process.env.REPLIT_DOMAINS) {
   throw new Error("Environment variable REPLIT_DOMAINS not provided");
@@ -236,11 +242,15 @@ export async function setupAuth(app: Express) {
       console.log("Final private key length:", privateKey.length);
       console.log("Private key validation: PASSED");
       
+      // Write private key to temporary file since passport-apple expects a file path
+      const tempKeyPath = path.join(__dirname, 'apple_private_key.p8');
+      fs.writeFileSync(tempKeyPath, privateKey);
+      
       passport.use('apple', new AppleStrategy({
         clientID: process.env.APPLE_CLIENT_ID,
         teamID: process.env.APPLE_TEAM_ID,
-        keyID: process.env.APPLE_KEY_ID,
-        privateKey: privateKey,
+        keyIdentifier: process.env.APPLE_KEY_ID,
+        privateKeyPath: tempKeyPath,
         callbackURL: "https://feastly.replit.app/api/callback/apple",
         scope: ['name', 'email'],
         response_mode: 'form_post',
