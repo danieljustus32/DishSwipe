@@ -98,7 +98,6 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
             const command = result[0].transcript.toLowerCase().trim();
             // Only process non-empty commands
             if (command.length > 0) {
-              setTranscript(command);
               console.log('Voice command received:', command);
               handleVoiceCommand(command);
               
@@ -211,6 +210,13 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
     if (!text || isPaused) return;
     
     try {
+      // Temporarily pause voice recognition during TTS to prevent feedback
+      const wasListening = isListening;
+      if (recognitionRef.current && isListening) {
+        recognitionRef.current.stop();
+        setIsListening(false);
+      }
+
       // Stop any currently playing audio
       if (audioRef.current) {
         audioRef.current.pause();
@@ -241,9 +247,22 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
         audioRef.current.src = audioUrl;
         await audioRef.current.play();
         
-        // Clean up the blob URL after playing
+        // Clean up the blob URL after playing and restart voice recognition
         audioRef.current.onended = () => {
           URL.revokeObjectURL(audioUrl);
+          
+          // Restart voice recognition after TTS finishes
+          if (wasListening && recognitionRef.current && isOpen && !isPaused && !manuallyStoppedRef.current) {
+            setTimeout(() => {
+              try {
+                recognitionRef.current.start();
+                setIsListening(true);
+                console.log('Voice recognition restarted after TTS');
+              } catch (error) {
+                console.error('Error restarting recognition after TTS:', error);
+              }
+            }, 500); // Small delay to ensure audio has fully stopped
+          }
         };
       }
     } catch (error) {
@@ -255,6 +274,22 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
         utterance.pitch = 0.95;
         utterance.volume = 0.9;
         window.speechSynthesis.speak(utterance);
+        
+        // Also restart voice recognition after fallback TTS
+        const wasListening = isListening;
+        utterance.onend = () => {
+          if (wasListening && recognitionRef.current && isOpen && !isPaused && !manuallyStoppedRef.current) {
+            setTimeout(() => {
+              try {
+                recognitionRef.current.start();
+                setIsListening(true);
+                console.log('Voice recognition restarted after fallback TTS');
+              } catch (error) {
+                console.error('Error restarting recognition after fallback TTS:', error);
+              }
+            }, 500);
+          }
+        };
       }
     }
   };
@@ -266,8 +301,12 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
 
     if (!matchedCommand) {
       console.log('No matching voice command found for:', command);
+      // Only update transcript for valid commands
       return;
     }
+
+    // Update transcript only for recognized commands
+    setTranscript(`Command: ${matchedCommand.description}`);
 
     switch (matchedCommand.action) {
       case 'next':
