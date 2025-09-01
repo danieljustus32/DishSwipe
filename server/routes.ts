@@ -689,8 +689,79 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ received: true });
   });
 
-  // Simple rate limiting for TTS requests
-  const ttsRateLimit = new Map();
+  // Enhanced TTS with caching and rate limiting
+  const ttsCache = new Map(); // Cache for generated audio
+  const ttsQueue = []; // Queue for pending requests
+  let isProcessingQueue = false;
+  
+  // Process TTS queue with rate limiting
+  const processTTSQueue = async () => {
+    if (isProcessingQueue || ttsQueue.length === 0) return;
+    
+    isProcessingQueue = true;
+    
+    while (ttsQueue.length > 0) {
+      const { text, resolve, reject } = ttsQueue.shift();
+      
+      try {
+        // Check cache first
+        const cacheKey = `${text.substring(0, 100)}_nova`;
+        if (ttsCache.has(cacheKey)) {
+          console.log('TTS cache hit for:', text.substring(0, 50));
+          resolve(ttsCache.get(cacheKey));
+          continue;
+        }
+
+        console.log('Making OpenAI TTS request for:', text.substring(0, 50));
+        
+        const openaiResponse = await fetch('https://api.openai.com/v1/audio/speech', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'tts-1',
+            voice: 'nova',
+            input: text.substring(0, 4000),
+            response_format: 'mp3',
+            speed: 0.9
+          }),
+        });
+
+        if (!openaiResponse.ok) {
+          if (openaiResponse.status === 429) {
+            console.log('OpenAI rate limit hit, waiting 2 seconds...');
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            // Re-queue this request
+            ttsQueue.unshift({ text, resolve, reject });
+            continue;
+          }
+          throw new Error(`OpenAI TTS API error: ${openaiResponse.status}`);
+        }
+
+        const audioBuffer = await openaiResponse.arrayBuffer();
+        
+        // Cache the result (limit cache size to prevent memory issues)
+        if (ttsCache.size > 50) {
+          const firstKey = ttsCache.keys().next().value;
+          ttsCache.delete(firstKey);
+        }
+        ttsCache.set(cacheKey, audioBuffer);
+        
+        resolve(audioBuffer);
+        
+        // Wait 1 second between requests to respect rate limits
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+      } catch (error) {
+        console.error('TTS queue processing error:', error);
+        reject(error);
+      }
+    }
+    
+    isProcessingQueue = false;
+  };
   
   // Text-to-speech endpoint using OpenAI TTS
   app.post('/api/voice/tts', async (req, res) => {
@@ -701,40 +772,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: 'Text is required' });
       }
 
-      // Simple rate limiting: max 1 request per second per IP
-      const clientIP = req.ip || 'unknown';
-      const now = Date.now();
-      const lastRequest = ttsRateLimit.get(clientIP);
-      
-      if (lastRequest && (now - lastRequest) < 1000) {
-        return res.status(429).json({ error: 'Rate limit: Please wait 1 second between requests' });
-      }
-      
-      ttsRateLimit.set(clientIP, now);
-
-      const openaiResponse = await fetch('https://api.openai.com/v1/audio/speech', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'tts-1',
-          voice: 'nova', // Natural female voice, good for cooking instructions
-          input: text.substring(0, 4000), // Limit text length to prevent excessive costs
-          response_format: 'mp3',
-          speed: 0.9 // Slightly slower for clarity
-        }),
+      // Add to queue and wait for processing
+      const audioBuffer = await new Promise((resolve, reject) => {
+        ttsQueue.push({ text, resolve, reject });
+        processTTSQueue().catch(reject);
       });
-
-      if (!openaiResponse.ok) {
-        if (openaiResponse.status === 429) {
-          return res.status(429).json({ error: 'OpenAI rate limit exceeded - please wait a moment' });
-        }
-        throw new Error(`OpenAI TTS API error: ${openaiResponse.status}`);
-      }
-
-      const audioBuffer = await openaiResponse.arrayBuffer();
       
       res.set({
         'Content-Type': 'audio/mpeg',
