@@ -219,8 +219,12 @@ export async function setupAuth(app: Express) {
       } as any,
       async (accessToken: any, refreshToken: any, idToken: any, profile: any, done: any) => {
         try {
-          console.log("Apple authentication callback triggered");
-          console.log("Profile received:", profile);
+          console.log("=== APPLE AUTHENTICATION CALLBACK TRIGGERED ===");
+          console.log("Access Token:", accessToken ? "Present" : "Missing");
+          console.log("Refresh Token:", refreshToken ? "Present" : "Missing");
+          console.log("ID Token:", idToken ? "Present" : "Missing");
+          console.log("Profile received:", JSON.stringify(profile, null, 2));
+          
           await upsertUserFromProvider(profile, 'apple');
           return done(null, { 
             provider: 'apple', 
@@ -229,7 +233,9 @@ export async function setupAuth(app: Express) {
             refresh_token: refreshToken 
           });
         } catch (error) {
-          console.error("Error in Apple authentication callback:", error);
+          console.error("=== ERROR IN APPLE AUTHENTICATION CALLBACK ===");
+          console.error("Error details:", error);
+          console.error("Error stack:", error.stack);
           return done(error, false);
         }
       }));
@@ -274,32 +280,48 @@ export async function setupAuth(app: Express) {
   );
 
   // Apple routes
-  app.get("/api/login/apple", 
-    passport.authenticate("apple")
-  );
+  app.get("/api/login/apple", (req, res, next) => {
+    console.log("=== APPLE LOGIN INITIATED ===");
+    console.log("Request headers:", req.headers);
+    console.log("Request query:", req.query);
+    passport.authenticate("apple")(req, res, next);
+  });
 
   // Apple uses form_post response mode, so it sends POST requests to the callback
   app.post("/api/callback/apple", (req, res, next) => {
-    console.log("Apple POST callback received");
-    console.log("Request body:", req.body);
-    console.log("Request query:", req.query);
+    console.log("=== APPLE POST CALLBACK RECEIVED ===");
+    console.log("Request URL:", req.url);
+    console.log("Request method:", req.method);
+    console.log("Request headers:", JSON.stringify(req.headers, null, 2));
+    console.log("Request body:", JSON.stringify(req.body, null, 2));
+    console.log("Request query:", JSON.stringify(req.query, null, 2));
+    console.log("Request params:", JSON.stringify(req.params, null, 2));
     
     passport.authenticate("apple", (err, user, info) => {
+      console.log("=== PASSPORT AUTHENTICATE APPLE RESULT ===");
       if (err) {
         console.error("Apple authentication error:", err);
-        return res.status(500).json({ message: "Failed to obtain access token", error: err.message });
+        console.error("Error type:", typeof err);
+        console.error("Error message:", err.message);
+        console.error("Error stack:", err.stack);
+        return res.status(500).json({ message: "Failed to obtain access token", error: err.message, details: err.toString() });
       }
       if (!user) {
-        console.error("Apple authentication failed - no user:", info);
-        return res.status(401).json({ message: "Authentication failed", info });
+        console.error("Apple authentication failed - no user");
+        console.error("Info object:", JSON.stringify(info, null, 2));
+        return res.status(401).json({ message: "Authentication failed", info, details: "No user returned from Apple authentication" });
       }
+      
+      console.log("=== APPLE AUTHENTICATION SUCCESS ===");
+      console.log("User object:", JSON.stringify(user, null, 2));
       
       req.logIn(user, (err) => {
         if (err) {
+          console.error("=== LOGIN ERROR ===");
           console.error("Login error:", err);
           return res.status(500).json({ message: "Login failed", error: err.message });
         }
-        console.log("Apple authentication successful, redirecting to /");
+        console.log("=== APPLE AUTHENTICATION COMPLETE - REDIRECTING ===");
         return res.redirect("/");
       });
     })(req, res, next);
@@ -307,25 +329,38 @@ export async function setupAuth(app: Express) {
 
   // Also handle GET requests for Apple callback (for compatibility)
   app.get("/api/callback/apple", (req, res, next) => {
-    console.log("Apple GET callback received");
-    console.log("Request query:", req.query);
+    console.log("=== APPLE GET CALLBACK RECEIVED ===");
+    console.log("Request URL:", req.url);
+    console.log("Request method:", req.method);
+    console.log("Request headers:", JSON.stringify(req.headers, null, 2));
+    console.log("Request query:", JSON.stringify(req.query, null, 2));
+    console.log("Request params:", JSON.stringify(req.params, null, 2));
     
     passport.authenticate("apple", (err, user, info) => {
+      console.log("=== PASSPORT AUTHENTICATE APPLE RESULT (GET) ===");
       if (err) {
         console.error("Apple authentication error:", err);
-        return res.status(500).json({ message: "Failed to obtain access token", error: err.message });
+        console.error("Error type:", typeof err);
+        console.error("Error message:", err.message);
+        console.error("Error stack:", err.stack);
+        return res.status(500).json({ message: "Failed to obtain access token", error: err.message, details: err.toString() });
       }
       if (!user) {
-        console.error("Apple authentication failed - no user:", info);
-        return res.status(401).json({ message: "Authentication failed", info });
+        console.error("Apple authentication failed - no user");
+        console.error("Info object:", JSON.stringify(info, null, 2));
+        return res.status(401).json({ message: "Authentication failed", info, details: "No user returned from Apple authentication" });
       }
+      
+      console.log("=== APPLE AUTHENTICATION SUCCESS (GET) ===");
+      console.log("User object:", JSON.stringify(user, null, 2));
       
       req.logIn(user, (err) => {
         if (err) {
+          console.error("=== LOGIN ERROR (GET) ===");
           console.error("Login error:", err);
           return res.status(500).json({ message: "Login failed", error: err.message });
         }
-        console.log("Apple authentication successful, redirecting to /");
+        console.log("=== APPLE AUTHENTICATION COMPLETE - REDIRECTING (GET) ===");
         return res.redirect("/");
       });
     })(req, res, next);
