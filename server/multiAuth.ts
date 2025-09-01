@@ -201,8 +201,8 @@ export async function setupAuth(app: Express) {
       // Ensure private key is properly formatted for Apple
       let privateKey = process.env.APPLE_PRIVATE_KEY;
       
-      // Remove any existing line breaks and spaces
-      privateKey = privateKey.replace(/\s/g, '');
+      // Remove ALL whitespace first
+      privateKey = privateKey.replace(/\s+/g, '');
       
       // Extract the key content between the headers
       const match = privateKey.match(/-----BEGINPRIVATEKEY-----(.*?)-----ENDPRIVATEKEY-----/);
@@ -210,19 +210,20 @@ export async function setupAuth(app: Express) {
         const keyContent = match[1];
         // Properly format with line breaks every 64 characters
         const formattedContent = keyContent.match(/.{1,64}/g)?.join('\n') || keyContent;
-        // Ensure no trailing spaces and proper line endings
+        // Recreate the key with exact formatting
         privateKey = `-----BEGIN PRIVATE KEY-----\n${formattedContent}\n-----END PRIVATE KEY-----`;
         
-        // Double check for any trailing spaces and remove them
-        privateKey = privateKey.replace(/ +\n/g, '\n');
-        privateKey = privateKey.replace(/ +-----END/g, '\n-----END');
-        
       } else {
-        console.error("Invalid Apple private key format");
+        console.error("Invalid Apple private key format - could not extract key content");
+        console.error("Raw key preview:", process.env.APPLE_PRIVATE_KEY.substring(0, 50));
       }
+      
+      // Final cleanup - ensure no extra spaces or characters
+      privateKey = privateKey.trim();
       
       console.log("Formatted private key preview:", privateKey.substring(0, 100) + "...");
       console.log("Private key ends with:", privateKey.slice(-40));
+      console.log("Final private key length:", privateKey.length);
       
       passport.use('apple', new AppleStrategy({
         clientID: process.env.APPLE_CLIENT_ID,
