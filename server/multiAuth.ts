@@ -293,7 +293,17 @@ export async function setupAuth(app: Express) {
     console.log("=== APPLE LOGIN INITIATED ===");
     console.log("Request headers:", req.headers);
     console.log("Request query:", req.query);
-    passport.authenticate("apple")(req, res, next);
+    
+    // Test if Apple strategy is available
+    const strategy = passport._strategy('apple');
+    console.log("Apple strategy available:", !!strategy);
+    
+    passport.authenticate("apple", (err) => {
+      if (err) {
+        console.error("Apple login error:", err);
+        return res.status(500).json({ error: "Apple login failed", details: err.message });
+      }
+    })(req, res, next);
   });
 
   // Apple uses form_post response mode, so it sends POST requests to the callback
