@@ -191,27 +191,44 @@ export async function setupAuth(app: Express) {
 
   // Configure Apple OAuth Strategy  
   if (process.env.APPLE_CLIENT_ID && process.env.APPLE_TEAM_ID && process.env.APPLE_KEY_ID && process.env.APPLE_PRIVATE_KEY) {
-    passport.use(new AppleStrategy({
-      clientID: process.env.APPLE_CLIENT_ID,
-      teamID: process.env.APPLE_TEAM_ID,
-      keyID: process.env.APPLE_KEY_ID,
-      key: process.env.APPLE_PRIVATE_KEY,
-      callbackURL: "/api/callback/apple",
-      scope: ['name', 'email']
-    } as any,
-    async (accessToken: any, refreshToken: any, idToken: any, profile: any, done: any) => {
-      try {
-        await upsertUserFromProvider(profile, 'apple');
-        return done(null, { 
-          provider: 'apple', 
-          profile,
-          access_token: accessToken,
-          refresh_token: refreshToken 
-        });
-      } catch (error) {
-        return done(error, false);
-      }
-    }));
+    try {
+      console.log("Configuring Apple Strategy with:");
+      console.log("- Client ID:", process.env.APPLE_CLIENT_ID);
+      console.log("- Team ID:", process.env.APPLE_TEAM_ID);
+      console.log("- Key ID:", process.env.APPLE_KEY_ID);
+      console.log("- Private Key length:", process.env.APPLE_PRIVATE_KEY.length);
+      
+      passport.use(new AppleStrategy({
+        clientID: process.env.APPLE_CLIENT_ID,
+        teamID: process.env.APPLE_TEAM_ID,
+        keyID: process.env.APPLE_KEY_ID,
+        key: process.env.APPLE_PRIVATE_KEY,
+        callbackURL: "https://feastly.replit.app/api/callback/apple",
+        scope: ['name', 'email'],
+        passReqToCallback: false
+      } as any,
+      async (accessToken: any, refreshToken: any, idToken: any, profile: any, done: any) => {
+        try {
+          console.log("Apple authentication callback triggered");
+          console.log("Profile received:", profile);
+          await upsertUserFromProvider(profile, 'apple');
+          return done(null, { 
+            provider: 'apple', 
+            profile,
+            access_token: accessToken,
+            refresh_token: refreshToken 
+          });
+        } catch (error) {
+          console.error("Error in Apple authentication callback:", error);
+          return done(error, false);
+        }
+      }));
+      console.log("Apple Strategy configured successfully");
+    } catch (error) {
+      console.error("Failed to configure Apple Strategy:", error);
+    }
+  } else {
+    console.log("Apple OAuth not configured - missing environment variables");
   }
 
   passport.serializeUser((user: Express.User, cb) => cb(null, user));
@@ -252,20 +269,57 @@ export async function setupAuth(app: Express) {
   );
 
   // Apple uses form_post response mode, so it sends POST requests to the callback
-  app.post("/api/callback/apple", 
-    passport.authenticate("apple", { 
-      successReturnToOrRedirect: "/",
-      failureRedirect: "/api/login"
-    })
-  );
+  app.post("/api/callback/apple", (req, res, next) => {
+    console.log("Apple POST callback received");
+    console.log("Request body:", req.body);
+    console.log("Request query:", req.query);
+    
+    passport.authenticate("apple", (err, user, info) => {
+      if (err) {
+        console.error("Apple authentication error:", err);
+        return res.status(500).json({ message: "Failed to obtain access token", error: err.message });
+      }
+      if (!user) {
+        console.error("Apple authentication failed - no user:", info);
+        return res.status(401).json({ message: "Authentication failed", info });
+      }
+      
+      req.logIn(user, (err) => {
+        if (err) {
+          console.error("Login error:", err);
+          return res.status(500).json({ message: "Login failed", error: err.message });
+        }
+        console.log("Apple authentication successful, redirecting to /");
+        return res.redirect("/");
+      });
+    })(req, res, next);
+  });
 
   // Also handle GET requests for Apple callback (for compatibility)
-  app.get("/api/callback/apple", 
-    passport.authenticate("apple", { 
-      successReturnToOrRedirect: "/",
-      failureRedirect: "/api/login"
-    })
-  );
+  app.get("/api/callback/apple", (req, res, next) => {
+    console.log("Apple GET callback received");
+    console.log("Request query:", req.query);
+    
+    passport.authenticate("apple", (err, user, info) => {
+      if (err) {
+        console.error("Apple authentication error:", err);
+        return res.status(500).json({ message: "Failed to obtain access token", error: err.message });
+      }
+      if (!user) {
+        console.error("Apple authentication failed - no user:", info);
+        return res.status(401).json({ message: "Authentication failed", info });
+      }
+      
+      req.logIn(user, (err) => {
+        if (err) {
+          console.error("Login error:", err);
+          return res.status(500).json({ message: "Login failed", error: err.message });
+        }
+        console.log("Apple authentication successful, redirecting to /");
+        return res.redirect("/");
+      });
+    })(req, res, next);
+  });
 
   // API route to get available auth providers
   app.get("/api/auth/providers", (req, res) => {
