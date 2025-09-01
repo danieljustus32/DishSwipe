@@ -89,25 +89,14 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
         console.log('English voices:', englishVoices.map(v => `${v.name} (${v.lang}) - ${v.localService ? 'Local' : 'Remote'}`));
         setAvailableVoices(englishVoices);
         
-        // Auto-select the best voice on first load
-        const preferredVoices = englishVoices.filter(voice => 
-          voice.name.includes('Google') || 
-          voice.name.includes('Microsoft') || 
-          voice.name.includes('Samantha') ||
-          voice.name.includes('Alex') ||
-          voice.name.includes('Natural') ||
-          voice.name.includes('Premium') ||
-          voice.localService === true
-        );
-        
-        console.log('Preferred voices found:', preferredVoices.map(v => `${v.name} (${v.lang}) - ${v.localService ? 'Local' : 'Remote'}`));
-        
-        if (preferredVoices.length > 0) {
-          const bestVoiceIndex = englishVoices.findIndex(v => v === preferredVoices[0]);
-          console.log('Selected voice index:', bestVoiceIndex, 'Voice:', preferredVoices[0].name);
-          setSelectedVoiceIndex(bestVoiceIndex);
+        // Select a random voice from available English voices
+        if (englishVoices.length > 0) {
+          const randomIndex = Math.floor(Math.random() * englishVoices.length);
+          const selectedVoice = englishVoices[randomIndex];
+          console.log('Randomly selected voice:', selectedVoice.name, 'from', englishVoices.length, 'available voices');
+          setSelectedVoiceIndex(randomIndex);
         } else {
-          console.log('No preferred voices found, using default voice');
+          console.log('No English voices found, using default voice');
         }
       };
       
@@ -265,21 +254,14 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
       } else {
         console.log('No voice selected, using browser default');
         
-        // Fallback: try to find any good voice manually
+        // Fallback: select a random English voice
         const allVoices = synthRef.current.getVoices();
-        const goodVoice = allVoices.find(voice => 
-          voice.lang.startsWith('en') && (
-            voice.name.includes('Google') ||
-            voice.name.includes('Microsoft') ||
-            voice.name.includes('Samantha') ||
-            voice.name.includes('Alex') ||
-            voice.localService === true
-          )
-        );
+        const englishVoices = allVoices.filter(voice => voice.lang.startsWith('en'));
         
-        if (goodVoice) {
-          utterance.voice = goodVoice;
-          console.log('Fallback voice selected:', goodVoice.name);
+        if (englishVoices.length > 0) {
+          const randomVoice = englishVoices[Math.floor(Math.random() * englishVoices.length)];
+          utterance.voice = randomVoice;
+          console.log('Random fallback voice selected:', randomVoice.name);
         }
       }
       
