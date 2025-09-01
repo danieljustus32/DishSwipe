@@ -149,6 +149,33 @@ function transformSpoonacularRecipe(recipe: SpoonacularRecipe) {
   };
 }
 
+// Helper function to get user ID from any authentication provider
+async function getUserFromRequest(req: any): Promise<any> {
+  if (req.user.claims?.sub) {
+    // Replit OIDC user
+    const user = await getUserFromRequest(req);
+    const userId = user.id;
+    return await storage.getUser(userId);
+  } else if (req.user.provider && req.user.profile) {
+    // Google or Apple user
+    const provider = req.user.provider;
+    const profile = req.user.profile;
+    
+    const providerId = provider === 'google' ? profile.id : 
+                      provider === 'apple' ? (profile.id || profile.sub) : null;
+    
+    if (providerId) {
+      const user = await storage.getUserByProviderId(providerId, provider);
+      if (user) {
+        return user;
+      }
+    }
+    throw new Error(`User not found for ${provider} provider`);
+  } else {
+    throw new Error("Invalid user session");
+  }
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
@@ -156,31 +183,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
-      let userId: string;
-      
-      if (req.user.claims?.sub) {
-        // Replit OIDC user
-        userId = req.user.claims.sub;
-      } else if (req.user.provider && req.user.profile) {
-        // Google or Apple user
-        const provider = req.user.provider;
-        const profile = req.user.profile;
-        
-        const providerId = provider === 'google' ? profile.id : 
-                          provider === 'apple' ? (profile.id || profile.sub) : null;
-        
-        if (providerId) {
-          const user = await storage.getUserByProviderId(providerId, provider);
-          if (user) {
-            return res.json(user);
-          }
-        }
-        throw new Error(`User not found for ${provider} provider`);
-      } else {
-        throw new Error("Invalid user session");
-      }
-      
-      const user = await storage.getUser(userId);
+      const user = await getUserFromRequest(req);
       res.json(user);
     } catch (error) {
       console.error("Error fetching user:", error);
@@ -191,7 +194,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Profile update route
   app.put('/api/profile', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const user = await getUserFromRequest(req);
+      const userId = user.id;
       const validatedData = updateProfileSchema.parse(req.body);
       
       const updatedUser = await storage.updateUserProfile(userId, validatedData);
@@ -216,7 +220,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Recipe discovery routes
   app.get('/api/recipes/discover', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const user = await getUserFromRequest(req);
+      const userId = user.id;
       const offset = parseInt(req.query.offset as string) || 0;
       const number = parseInt(req.query.number as string) || 10;
 
@@ -274,8 +279,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // User preferences routes
   app.post('/api/preferences', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
+      const user = await getUserFromRequest(req);
+      const userId = user.id;
       
       if (!user) {
         return res.status(404).json({ message: "User not found" });
@@ -325,7 +330,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Cookbook routes
   app.get('/api/cookbook', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const user = await getUserFromRequest(req);
+      const userId = user.id;
       const userRecipes = await storage.getUserRecipes(userId);
       res.json(userRecipes);
     } catch (error) {
@@ -336,7 +342,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/cookbook', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const user = await getUserFromRequest(req);
+      const userId = user.id;
       const userRecipeData = insertUserRecipeSchema.parse({
         ...req.body,
         userId,
@@ -358,7 +365,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete('/api/cookbook/:recipeId', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const user = await getUserFromRequest(req);
+      const userId = user.id;
       const { recipeId } = req.params;
 
       await storage.removeUserRecipe(userId, recipeId);
@@ -372,7 +380,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Shopping list routes
   app.get('/api/shopping-list', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const user = await getUserFromRequest(req);
+      const userId = user.id;
       const items = await storage.getShoppingList(userId);
       
       // Group by aisle
@@ -392,7 +401,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/shopping-list', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const user = await getUserFromRequest(req);
+      const userId = user.id;
       const itemData = insertShoppingListItemSchema.parse({
         ...req.body,
         userId,
@@ -408,7 +418,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/shopping-list/recipe/:recipeId', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const user = await getUserFromRequest(req);
+      const userId = user.id;
       const { recipeId } = req.params;
       
       const recipe = await storage.getRecipe(recipeId);
@@ -462,7 +473,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete('/api/shopping-list', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const user = await getUserFromRequest(req);
+      const userId = user.id;
       await storage.clearShoppingList(userId);
       res.json({ message: "Shopping list cleared" });
     } catch (error) {
@@ -474,8 +486,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // User status and profile routes
   app.get('/api/user/status', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
+      const user = await getUserFromRequest(req);
+      const userId = user.id;
       
       if (!user) {
         return res.status(404).json({ message: "User not found" });
@@ -504,12 +516,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(503).json({ message: "Payment processing not available. Please contact support." });
       }
 
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
+      const user = await getUserFromRequest(req);
+      const userId = user.id;
 
       // Check if user already has an active subscription
       if (user.stripeSubscriptionId) {
@@ -595,8 +603,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(503).json({ message: "Payment processing not available. Please contact support." });
       }
 
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
+      const user = await getUserFromRequest(req);
+      const userId = user.id;
 
       if (!user) {
         return res.status(404).json({ message: "User not found" });

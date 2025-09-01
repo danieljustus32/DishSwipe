@@ -1,0 +1,89 @@
+Error fetching recipes: TypeError: Cannot read properties of undefined (reading 'sub')
+2025-09-01 16:16:06.47
+4e80ba5f
+User
+at file:///home/runner/workspace/dist/index.js:1256:38
+2025-09-01 16:16:06.47
+4e80ba5f
+User
+at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:95:5)
+2025-09-01 16:16:06.47
+4e80ba5f
+User
+at next (/home/runner/workspace/node_modules/express/lib/router/route.js:149:13)
+2025-09-01 16:16:06.47
+4e80ba5f
+User
+at isAuthenticated (file:///home/runner/workspace/dist/index.js:886:12)
+2025-09-01 16:16:06.47
+4e80ba5f
+User
+at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:95:5)
+2025-09-01 16:16:06.47
+4e80ba5f
+User
+at next (/home/runner/workspace/node_modules/express/lib/router/route.js:149:13)
+2025-09-01 16:16:06.47
+4e80ba5f
+User
+at Route.dispatch (/home/runner/workspace/node_modules/express/lib/router/route.js:119:3)
+2025-09-01 16:16:06.47
+4e80ba5f
+User
+at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:95:5)
+2025-09-01 16:16:06.47
+4e80ba5f
+User
+at /home/runner/workspace/node_modules/express/lib/router/index.js:284:15
+2025-09-01 16:16:06.47
+4e80ba5f
+User
+at Function.process_params (/home/runner/workspace/node_modules/express/lib/router/index.js:346:12)
+2025-09-01 16:16:06.52
+4e80ba5f
+User
+11:16:06 PM [express] GET /api/recipes/discover 500 in 92ms :: {"message":"Failed to fetch recipes"}
+2025-09-01 16:16:09.16
+4e80ba5f
+User
+Error fetching user status: TypeError: Cannot read properties of undefined (reading 'sub')
+2025-09-01 16:16:09.16
+4e80ba5f
+User
+at file:///home/runner/workspace/dist/index.js:1465:38
+2025-09-01 16:16:09.16
+4e80ba5f
+User
+at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:95:5)
+2025-09-01 16:16:09.16
+4e80ba5f
+User
+at next (/home/runner/workspace/node_modules/express/lib/router/route.js:149:13)
+2025-09-01 16:16:09.16
+4e80ba5f
+User
+at isAuthenticated (file:///home/runner/workspace/dist/index.js:886:12)
+2025-09-01 16:16:09.16
+4e80ba5f
+User
+at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:95:5)
+2025-09-01 16:16:09.16
+4e80ba5f
+User
+at next (/home/runner/workspace/node_modules/express/lib/router/route.js:149:13)
+2025-09-01 16:16:09.16
+4e80ba5f
+User
+at Route.dispatch (/home/runner/workspace/node_modules/express/lib/router/route.js:119:3)
+2025-09-01 16:16:09.16
+4e80ba5f
+User
+at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:95:5)
+2025-09-01 16:16:09.16
+4e80ba5f
+User
+at /home/runner/workspace/node_modules/express/lib/router/index.js:284:15
+2025-09-01 16:16:09.16
+4e80ba5f
+User
+at Function.process_params (/home/runner/workspace/node_modules/express/lib/router/index.js:346:12)
