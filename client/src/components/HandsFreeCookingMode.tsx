@@ -83,7 +83,10 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
       // Load available voices when synthesis is ready
       const loadVoices = () => {
         const voices = synthRef.current?.getVoices() || [];
+        console.log('All available voices:', voices.map(v => `${v.name} (${v.lang}) - ${v.localService ? 'Local' : 'Remote'}`));
+        
         const englishVoices = voices.filter(voice => voice.lang.startsWith('en'));
+        console.log('English voices:', englishVoices.map(v => `${v.name} (${v.lang}) - ${v.localService ? 'Local' : 'Remote'}`));
         setAvailableVoices(englishVoices);
         
         // Auto-select the best voice on first load
@@ -92,12 +95,19 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
           voice.name.includes('Microsoft') || 
           voice.name.includes('Samantha') ||
           voice.name.includes('Alex') ||
-          voice.name.includes('Natural')
+          voice.name.includes('Natural') ||
+          voice.name.includes('Premium') ||
+          voice.localService === true
         );
+        
+        console.log('Preferred voices found:', preferredVoices.map(v => `${v.name} (${v.lang}) - ${v.localService ? 'Local' : 'Remote'}`));
         
         if (preferredVoices.length > 0) {
           const bestVoiceIndex = englishVoices.findIndex(v => v === preferredVoices[0]);
+          console.log('Selected voice index:', bestVoiceIndex, 'Voice:', preferredVoices[0].name);
           setSelectedVoiceIndex(bestVoiceIndex);
+        } else {
+          console.log('No preferred voices found, using default voice');
         }
       };
       
@@ -240,9 +250,37 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
       synthRef.current.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
       
+      console.log('Available voices count:', availableVoices.length);
+      console.log('Selected voice index:', selectedVoiceIndex);
+      
       // Use the selected voice if available
       if (availableVoices.length > 0 && availableVoices[selectedVoiceIndex]) {
         utterance.voice = availableVoices[selectedVoiceIndex];
+        console.log('Selected voice details:', {
+          name: utterance.voice.name,
+          lang: utterance.voice.lang,
+          localService: utterance.voice.localService,
+          voiceURI: utterance.voice.voiceURI
+        });
+      } else {
+        console.log('No voice selected, using browser default');
+        
+        // Fallback: try to find any good voice manually
+        const allVoices = synthRef.current.getVoices();
+        const goodVoice = allVoices.find(voice => 
+          voice.lang.startsWith('en') && (
+            voice.name.includes('Google') ||
+            voice.name.includes('Microsoft') ||
+            voice.name.includes('Samantha') ||
+            voice.name.includes('Alex') ||
+            voice.localService === true
+          )
+        );
+        
+        if (goodVoice) {
+          utterance.voice = goodVoice;
+          console.log('Fallback voice selected:', goodVoice.name);
+        }
       }
       
       // Optimize speech parameters for naturalness
@@ -250,7 +288,7 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
       utterance.pitch = 0.95; // Slightly lower pitch for warmth
       utterance.volume = 0.9; // Clear volume
       
-      console.log('Using voice:', utterance.voice?.name || 'default');
+      console.log('Speaking with voice:', utterance.voice?.name || 'browser default');
       synthRef.current.speak(utterance);
     }
   };
