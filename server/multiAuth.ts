@@ -251,6 +251,15 @@ export async function setupAuth(app: Express) {
     passport.authenticate("apple")
   );
 
+  // Apple uses form_post response mode, so it sends POST requests to the callback
+  app.post("/api/callback/apple", 
+    passport.authenticate("apple", { 
+      successReturnToOrRedirect: "/",
+      failureRedirect: "/api/login"
+    })
+  );
+
+  // Also handle GET requests for Apple callback (for compatibility)
   app.get("/api/callback/apple", 
     passport.authenticate("apple", { 
       successReturnToOrRedirect: "/",
