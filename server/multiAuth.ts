@@ -201,6 +201,10 @@ export async function setupAuth(app: Express) {
       // Ensure private key is properly formatted for Apple
       let privateKey = process.env.APPLE_PRIVATE_KEY;
       
+      if (!privateKey || privateKey.trim().length === 0) {
+        throw new Error("APPLE_PRIVATE_KEY environment variable is empty or missing");
+      }
+      
       // Remove ALL whitespace first
       privateKey = privateKey.replace(/\s+/g, '');
       
@@ -216,20 +220,27 @@ export async function setupAuth(app: Express) {
       } else {
         console.error("Invalid Apple private key format - could not extract key content");
         console.error("Raw key preview:", process.env.APPLE_PRIVATE_KEY.substring(0, 50));
+        throw new Error("Invalid Apple private key format");
       }
       
       // Final cleanup - ensure no extra spaces or characters
       privateKey = privateKey.trim();
       
+      // Validate the final key format
+      if (!privateKey.includes('-----BEGIN PRIVATE KEY-----') || !privateKey.includes('-----END PRIVATE KEY-----')) {
+        throw new Error("Apple private key missing required PEM headers");
+      }
+      
       console.log("Formatted private key preview:", privateKey.substring(0, 100) + "...");
       console.log("Private key ends with:", privateKey.slice(-40));
       console.log("Final private key length:", privateKey.length);
+      console.log("Private key validation: PASSED");
       
       passport.use('apple', new AppleStrategy({
         clientID: process.env.APPLE_CLIENT_ID,
         teamID: process.env.APPLE_TEAM_ID,
         keyID: process.env.APPLE_KEY_ID,
-        key: privateKey,
+        privateKey: privateKey,
         callbackURL: "https://feastly.replit.app/api/callback/apple",
         scope: ['name', 'email'],
         response_mode: 'form_post',
