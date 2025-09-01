@@ -198,15 +198,24 @@ export async function setupAuth(app: Express) {
       console.log("- Key ID:", process.env.APPLE_KEY_ID);
       console.log("- Private Key length:", process.env.APPLE_PRIVATE_KEY.length);
       
-      // Ensure private key is properly formatted
+      // Ensure private key is properly formatted for Apple
       let privateKey = process.env.APPLE_PRIVATE_KEY;
-      if (!privateKey.includes('\n')) {
-        // If the key doesn't have line breaks, add them
-        privateKey = privateKey.replace(/-----BEGIN PRIVATE KEY-----/, '-----BEGIN PRIVATE KEY-----\n')
-                              .replace(/-----END PRIVATE KEY-----/, '\n-----END PRIVATE KEY-----')
-                              .replace(/(.{64})/g, '$1\n')
-                              .replace(/\n\n/g, '\n');
+      
+      // Remove any existing line breaks and spaces
+      privateKey = privateKey.replace(/\s/g, '');
+      
+      // Extract the key content between the headers
+      const match = privateKey.match(/-----BEGINPRIVATEKEY-----(.*?)-----ENDPRIVATEKEY-----/);
+      if (match) {
+        const keyContent = match[1];
+        // Properly format with line breaks every 64 characters
+        const formattedContent = keyContent.match(/.{1,64}/g)?.join('\n') || keyContent;
+        privateKey = `-----BEGIN PRIVATE KEY-----\n${formattedContent}\n-----END PRIVATE KEY-----`;
+      } else {
+        console.error("Invalid Apple private key format");
       }
+      
+      console.log("Formatted private key preview:", privateKey.substring(0, 100) + "...");
       
       passport.use(new AppleStrategy({
         clientID: process.env.APPLE_CLIENT_ID,
