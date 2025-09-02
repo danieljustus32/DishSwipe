@@ -27,6 +27,7 @@ export interface IStorage {
   getUserByProviderId(providerId: string, provider: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
+  createUserWithPassword(userData: { email: string; password: string; firstName: string; lastName: string }): Promise<User>;
   updateUserProfile(userId: string, profileData: { firstName: string; lastName: string; email: string }): Promise<User>;
   
   // Recipe operations
@@ -105,6 +106,20 @@ export class DatabaseStorage implements IStorage {
           ...userData,
           updatedAt: new Date(),
         },
+      })
+      .returning();
+    return user;
+  }
+
+  async createUserWithPassword(userData: { email: string; password: string; firstName: string; lastName: string }): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values({
+        email: userData.email,
+        password: userData.password,
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        authProvider: "email",
       })
       .returning();
     return user;

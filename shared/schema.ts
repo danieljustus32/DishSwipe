@@ -31,8 +31,10 @@ export const users = pgTable("users", {
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
+  // Password field for email/password authentication
+  password: varchar("password"), // Hashed password - optional for OAuth users
   // Authentication provider fields
-  authProvider: varchar("auth_provider").default("replit"), // 'replit', 'google', 'apple'
+  authProvider: varchar("auth_provider").default("replit"), // 'replit', 'google', 'apple', 'email'
   googleId: varchar("google_id"),
   appleId: varchar("apple_id"),
   replitId: varchar("replit_id"),
@@ -194,6 +196,25 @@ export const insertDailyUsageSchema = createInsertSchema(dailyUsage).omit({
   updatedAt: true,
 });
 
+// Password validation schema with complexity requirements
+const passwordSchema = z.string()
+  .min(8, "Password must be at least 8 characters long")
+  .regex(/[0-9]/, "Password must contain at least one number")
+  .regex(/[!@#$%^&*(),.?":{}|<>]/, "Password must contain at least one special character");
+
+// Email/password authentication schemas
+export const registerSchema = z.object({
+  email: z.string().email("Invalid email address"),
+  password: passwordSchema,
+  firstName: z.string().min(1, "First name is required").max(50, "First name too long"),
+  lastName: z.string().min(1, "Last name is required").max(50, "Last name too long"),
+});
+
+export const loginSchema = z.object({
+  email: z.string().email("Invalid email address"),
+  password: z.string().min(1, "Password is required"),
+});
+
 // Profile update schema for user-editable fields
 export const updateProfileSchema = z.object({
   firstName: z.string().min(1, "First name is required").max(50, "First name too long"),
@@ -204,6 +225,8 @@ export const updateProfileSchema = z.object({
 // Types
 export type UpsertUser = typeof users.$inferInsert;
 export type UpdateProfile = z.infer<typeof updateProfileSchema>;
+export type RegisterData = z.infer<typeof registerSchema>;
+export type LoginData = z.infer<typeof loginSchema>;
 export type User = typeof users.$inferSelect;
 export type Recipe = typeof recipes.$inferSelect;
 export type InsertRecipe = z.infer<typeof insertRecipeSchema>;

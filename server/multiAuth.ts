@@ -2,6 +2,7 @@ import * as client from "openid-client";
 import { Strategy as ReplitStrategy, type VerifyFunction } from "openid-client/passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import { Strategy as AppleStrategy } from "passport-apple";
+import { Strategy as LocalStrategy } from "passport-local";
 
 import passport from "passport";
 import session from "express-session";
@@ -9,6 +10,7 @@ import type { Express, RequestHandler } from "express";
 import memoize from "memoizee";
 import connectPg from "connect-pg-simple";
 import { storage } from "./storage";
+import { comparePasswords } from "./passwordUtils";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -296,7 +298,7 @@ export async function setupAuth(app: Express) {
             profile: appleProfile,
             id_token: idToken
           });
-        } catch (error) {
+        } catch (error: any) {
           console.error("=== ERROR IN APPLE AUTHENTICATION CALLBACK ===");
           console.error("Error details:", error);
           console.error("Error stack:", error.stack);
@@ -304,13 +306,55 @@ export async function setupAuth(app: Express) {
         }
       }));
       console.log("Apple Strategy configured successfully");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to configure Apple Strategy:", error);
       console.error("Error stack:", error.stack);
     }
   } else {
     console.log("Apple OAuth not configured - missing environment variables");
   }
+
+  // Configure Local Strategy for email/password authentication
+  passport.use(new LocalStrategy({
+    usernameField: 'email',
+    passwordField: 'password'
+  }, async (email, password, done) => {
+    try {
+      // Find user by email
+      const user = await storage.getUserByEmail(email);
+      
+      if (!user) {
+        return done(null, false, { message: 'No account found with this email address' });
+      }
+
+      // Check if user has a password (OAuth users might not)
+      if (!user.password) {
+        return done(null, false, { message: 'This account uses social sign-in. Please use the appropriate sign-in method.' });
+      }
+
+      // Compare password
+      const isValidPassword = await comparePasswords(password, user.password);
+      
+      if (!isValidPassword) {
+        return done(null, false, { message: 'Incorrect password' });
+      }
+
+      // Authentication successful
+      return done(null, {
+        provider: 'email',
+        profile: {
+          id: user.id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          profileImageUrl: user.profileImageUrl
+        }
+      });
+    } catch (error) {
+      console.error('Local authentication error:', error);
+      return done(error, false);
+    }
+  }));
 
   passport.serializeUser((user: Express.User, cb) => cb(null, user));
   passport.deserializeUser((user: Express.User, cb) => cb(null, user));
@@ -441,9 +485,92 @@ export async function setupAuth(app: Express) {
     })(req, res, next);
   });
 
+  // Email/password authentication routes
+  app.post("/api/register", async (req, res) => {
+    try {
+      const { registerSchema } = await import("@shared/schema");
+      const { hashPassword } = await import("./passwordUtils");
+      
+      // Validate request body
+      const validationResult = registerSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: "Validation failed", 
+          errors: validationResult.error.errors 
+        });
+      }
+
+      const { email, password, firstName, lastName } = validationResult.data;
+
+      // Check if user already exists
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser) {
+        return res.status(409).json({ 
+          message: "An account with this email address already exists" 
+        });
+      }
+
+      // Hash password
+      const hashedPassword = await hashPassword(password);
+
+      // Create user
+      const newUser = await storage.createUserWithPassword({
+        email,
+        password: hashedPassword,
+        firstName,
+        lastName
+      });
+
+      // Log user in automatically after registration
+      req.logIn({
+        provider: 'email',
+        profile: {
+          id: newUser.id,
+          email: newUser.email,
+          firstName: newUser.firstName,
+          lastName: newUser.lastName,
+          profileImageUrl: newUser.profileImageUrl
+        }
+      }, (err) => {
+        if (err) {
+          console.error('Auto-login after registration failed:', err);
+          return res.status(500).json({ message: "Registration successful but auto-login failed" });
+        }
+        res.status(201).json({ message: "Registration successful", user: newUser });
+      });
+    } catch (error: any) {
+      console.error('Registration error:', error);
+      res.status(500).json({ message: "Registration failed", error: error.message });
+    }
+  });
+
+  app.post("/api/login/email", (req, res, next) => {
+    passport.authenticate('local', (err: any, user: any, info: any) => {
+      if (err) {
+        console.error('Login error:', err);
+        return res.status(500).json({ message: "Login failed", error: err.message });
+      }
+      
+      if (!user) {
+        return res.status(401).json({ 
+          message: info?.message || "Authentication failed"
+        });
+      }
+
+      req.logIn(user, (err) => {
+        if (err) {
+          console.error('Login session error:', err);
+          return res.status(500).json({ message: "Login session failed" });
+        }
+        
+        res.json({ message: "Login successful", user });
+      });
+    })(req, res, next);
+  });
+
   // API route to get available auth providers
   app.get("/api/auth/providers", (req, res) => {
-    const providers = ["replit"]; // Replit is always available
+    const providers = ["replit", "email"]; // Replit and email are always available
     
     // Check if Google OAuth is configured
     if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {

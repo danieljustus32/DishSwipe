@@ -1,12 +1,15 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Heart, Search, ShoppingCart } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import { Heart, Search, ShoppingCart, Mail } from "lucide-react";
 import { SiGoogle, SiApple } from "react-icons/si";
 import { useQuery } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
+import { EmailAuth } from "@/components/EmailAuth";
 
 export default function Landing() {
   const [availableProviders, setAvailableProviders] = useState<string[]>([]);
+  const [showEmailAuth, setShowEmailAuth] = useState(false);
 
   // Fetch available authentication providers
   const { data: providersData } = useQuery({
@@ -15,7 +18,7 @@ export default function Landing() {
   });
 
   useEffect(() => {
-    if (providersData?.providers) {
+    if (providersData && 'providers' in providersData && Array.isArray(providersData.providers)) {
       setAvailableProviders(providersData.providers);
     }
   }, [providersData]);
@@ -24,6 +27,35 @@ export default function Landing() {
     const baseUrl = provider ? `/api/login/${provider}` : "/api/login";
     window.location.href = baseUrl;
   };
+
+  if (showEmailAuth) {
+    return (
+      <div className="min-h-screen bg-accent">
+        <div className="max-w-md mx-auto bg-white shadow-xl min-h-screen">
+          {/* Header */}
+          <div className="bg-primary text-primary-foreground p-6 text-center">
+            <h1 className="text-3xl font-bold mb-2">FlavorSwipe</h1>
+            <p className="text-primary-foreground/80">Discover recipes you'll love</p>
+          </div>
+
+          <div className="p-6">
+            <EmailAuth onSuccess={() => setShowEmailAuth(false)} />
+            
+            <div className="mt-6">
+              <Button
+                variant="outline"
+                onClick={() => setShowEmailAuth(false)}
+                className="w-full"
+                data-testid="button-back-to-social-login"
+              >
+                ← Back to other sign-in options
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-accent">
@@ -91,6 +123,28 @@ export default function Landing() {
               <p className="text-sm text-muted-foreground mb-4">Sign in to get started</p>
             </div>
             
+            {/* Email/Password Sign In - Always available */}
+            {availableProviders.includes('email') && (
+              <Button
+                onClick={() => setShowEmailAuth(true)}
+                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-3 text-base font-semibold flex items-center justify-center gap-3"
+                size="lg"
+                data-testid="button-email-login"
+              >
+                <Mail className="w-5 h-5" />
+                Continue with Email
+              </Button>
+            )}
+
+            {/* Show separator if there are other providers */}
+            {(availableProviders.includes('google') || availableProviders.includes('apple') || availableProviders.includes('replit')) && availableProviders.includes('email') && (
+              <div className="flex items-center justify-center">
+                <Separator className="flex-1" />
+                <span className="px-4 text-xs text-muted-foreground">or</span>
+                <Separator className="flex-1" />
+              </div>
+            )}
+            
             {/* Google Sign In - Only show if available */}
             {availableProviders.includes('google') && (
               <Button 
@@ -122,7 +176,8 @@ export default function Landing() {
             {/* Replit Sign In (Always available) */}
             <Button 
               onClick={() => handleLogin()}
-              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-3 text-base font-semibold"
+              variant="outline"
+              className="w-full flex items-center justify-center gap-3 py-3 text-base font-medium border-2 hover:bg-gray-50"
               size="lg"
               data-testid="button-replit-login"
             >
