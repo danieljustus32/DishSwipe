@@ -432,6 +432,7 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
 
   const handleNext = () => {
     const currentStepValue = currentStepRef.current;
+    console.log('handleNext called - phase:', phase, 'currentStep:', currentStepValue);
     
     if (phase === 'preparation') {
       // Mark current ingredient as complete before moving to next
