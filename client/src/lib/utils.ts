@@ -82,40 +82,55 @@ function decimalToFraction(decimal: number, tolerance: number = 0.001): string {
 }
 
 export function formatQuantity(amount: string | null): string {
+  console.log('formatQuantity called with:', amount);
+  
   if (!amount || amount.trim() === '') {
+    console.log('Empty amount, returning empty string');
     return '';
   }
 
   // First check if it's already in a good format (contains fraction slash or is whole number)
   if (amount.includes('/') || !amount.includes('.')) {
+    console.log('Amount already in good format:', amount);
     return amount;
   }
 
   // Parse the quantity string to extract number and unit
   const match = amount.match(/^([0-9]*\.?[0-9]+)\s*(.*)$/);
   if (!match) {
+    console.log('No match found, returning original:', amount);
     return amount;
   }
 
   const [, numberStr, unit] = match;
   const number = parseFloat(numberStr);
+  console.log('Parsed number:', number, 'unit:', unit);
   
   if (isNaN(number)) {
+    console.log('Invalid number, returning original:', amount);
     return amount;
   }
 
   // Check common fractions first for exact matches
   const roundedStr = number.toFixed(6);
+  console.log('Looking for common fractions for number:', number);
   for (const [decimal, fraction] of Object.entries(COMMON_FRACTIONS)) {
     // Check for exact match or very close match (for floating point precision issues)
-    if (Math.abs(number - parseFloat(decimal)) < 0.001) {
-      return unit ? `${fraction} ${unit}` : fraction;
+    const diff = Math.abs(number - parseFloat(decimal));
+    console.log(`Checking ${decimal} (${fraction}), diff: ${diff}`);
+    if (diff < 0.001) {
+      const result = unit ? `${fraction} ${unit}` : fraction;
+      console.log('Found common fraction match:', result);
+      return result;
     }
   }
 
+  console.log('No common fraction found, trying algorithmic conversion');
   // Try algorithmic conversion
   const fraction = decimalToFraction(number);
-  return unit ? `${fraction} ${unit}` : fraction;
+  const result = unit ? `${fraction} ${unit}` : fraction;
+  console.log('Algorithmic conversion result:', result);
+  return result;
 }
 
 // Parse a quantity string to extract numeric value and unit
