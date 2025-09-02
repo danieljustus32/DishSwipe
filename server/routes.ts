@@ -705,10 +705,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = await getUserFromRequest(req);
       const userId = user.id;
       
-      // Remove tutorial cookbook recipes
-      for (const recipe of mockCookbookRecipes) {
-        await storage.removeUserRecipe(userId, recipe.id);
-        // Note: We don't delete the recipe itself as it might be used by other users
+      // Remove tutorial cookbook recipes by spoonacularId
+      const userRecipes = await storage.getCookbook(userId);
+      for (const userRecipe of userRecipes) {
+        // Check if this recipe is one of our tutorial mock recipes
+        const isTutorialRecipe = mockCookbookRecipes.some(mock => 
+          mock.spoonacularId === userRecipe.spoonacularId
+        );
+        if (isTutorialRecipe) {
+          await storage.removeUserRecipe(userId, userRecipe.id);
+        }
       }
       
       // Remove tutorial shopping list items
