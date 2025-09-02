@@ -107,7 +107,8 @@ export function formatQuantity(amount: string | null): string {
   // Check common fractions first for exact matches
   const roundedStr = number.toFixed(6);
   for (const [decimal, fraction] of Object.entries(COMMON_FRACTIONS)) {
-    if (roundedStr.startsWith(decimal)) {
+    // Check for exact match or very close match (for floating point precision issues)
+    if (Math.abs(number - parseFloat(decimal)) < 0.001) {
       return unit ? `${fraction} ${unit}` : fraction;
     }
   }
