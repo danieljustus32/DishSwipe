@@ -132,7 +132,10 @@ export function EmailAuth({ onSuccess }: EmailAuthProps) {
                         type="email"
                         placeholder="Enter your email"
                         data-testid="input-login-email"
-                        {...field}
+                        value={field.value}
+                        onChange={field.onChange}
+                        onBlur={field.onBlur}
+                        name={field.name}
                       />
                     </FormControl>
                     <FormMessage />
@@ -150,7 +153,10 @@ export function EmailAuth({ onSuccess }: EmailAuthProps) {
                         type="password"
                         placeholder="Enter your password"
                         data-testid="input-login-password"
-                        {...field}
+                        value={field.value}
+                        onChange={field.onChange}
+                        onBlur={field.onBlur}
+                        name={field.name}
                       />
                     </FormControl>
                     <FormMessage />
@@ -181,7 +187,10 @@ export function EmailAuth({ onSuccess }: EmailAuthProps) {
                         <Input
                           placeholder="First name"
                           data-testid="input-register-firstname"
-                          {...field}
+                          value={field.value}
+                          onChange={field.onChange}
+                          onBlur={field.onBlur}
+                          name={field.name}
                         />
                       </FormControl>
                       <FormMessage />
@@ -198,7 +207,10 @@ export function EmailAuth({ onSuccess }: EmailAuthProps) {
                         <Input
                           placeholder="Last name"
                           data-testid="input-register-lastname"
-                          {...field}
+                          value={field.value}
+                          onChange={field.onChange}
+                          onBlur={field.onBlur}
+                          name={field.name}
                         />
                       </FormControl>
                       <FormMessage />
@@ -217,7 +229,10 @@ export function EmailAuth({ onSuccess }: EmailAuthProps) {
                         type="email"
                         placeholder="Enter your email"
                         data-testid="input-register-email"
-                        {...field}
+                        value={field.value}
+                        onChange={field.onChange}
+                        onBlur={field.onBlur}
+                        name={field.name}
                       />
                     </FormControl>
                     <FormMessage />
@@ -235,7 +250,10 @@ export function EmailAuth({ onSuccess }: EmailAuthProps) {
                         type="password"
                         placeholder="Create a strong password"
                         data-testid="input-register-password"
-                        {...field}
+                        value={field.value}
+                        onChange={field.onChange}
+                        onBlur={field.onBlur}
+                        name={field.name}
                       />
                     </FormControl>
                     <FormMessage />
