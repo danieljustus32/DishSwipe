@@ -33,6 +33,7 @@ export function EmailAuth({ onSuccess }: EmailAuthProps) {
     defaultValues: {
       email: "",
       password: "",
+      confirmPassword: "",
       firstName: "",
       lastName: "",
     },
@@ -74,10 +75,12 @@ export function EmailAuth({ onSuccess }: EmailAuthProps) {
 
   const registerMutation = useMutation({
     mutationFn: async (data: RegisterData) => {
+      // Remove confirmPassword before sending to server
+      const { confirmPassword, ...registerData } = data;
       const response = await fetch("/api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify(registerData),
       });
       
       if (!response.ok) {
@@ -256,6 +259,27 @@ export function EmailAuth({ onSuccess }: EmailAuthProps) {
                     <div className="text-xs text-muted-foreground">
                       Password must be at least 8 characters with a number and special character
                     </div>
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={registerForm.control}
+                name="confirmPassword"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Confirm Password</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="password"
+                        placeholder="Re-enter your password"
+                        data-testid="input-register-confirm-password"
+                        value={field.value}
+                        onChange={field.onChange}
+                        onBlur={field.onBlur}
+                        name={field.name}
+                      />
+                    </FormControl>
+                    <FormMessage />
                   </FormItem>
                 )}
               />
