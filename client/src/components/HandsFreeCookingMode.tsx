@@ -244,6 +244,11 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
     }
   }, [isOpen, recipe.title]);
 
+  // Debug: Track currentStep changes
+  useEffect(() => {
+    console.log('currentStep state changed to:', currentStep, 'in phase:', phase);
+  }, [currentStep, phase]);
+
   const speak = async (text: string) => {
     if (!text || isPaused) return;
     
@@ -431,9 +436,15 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
       console.log('Preparation phase - next step would be:', nextStep, 'total ingredients:', recipe.ingredients.length);
       
       if (nextStep < recipe.ingredients.length) {
+        console.log('Setting currentStep from', currentStep, 'to', nextStep);
         setCurrentStep(nextStep);
-        const ingredient = recipe.ingredients[nextStep];
-        speak(`Next ingredient: Measure ${ingredient.amount} ${ingredient.unit} of ${ingredient.name}.`);
+        
+        // Use setTimeout to ensure state update has processed
+        setTimeout(() => {
+          console.log('State updated - currentStep should now be:', nextStep);
+          const ingredient = recipe.ingredients[nextStep];
+          speak(`Next ingredient: Measure ${ingredient.amount} ${ingredient.unit} of ${ingredient.name}.`);
+        }, 100);
       } else {
         speak("All ingredients measured! Say 'start cooking' to begin the cooking instructions.");
       }
@@ -442,8 +453,14 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
       console.log('Cooking phase - next step would be:', nextStep, 'total instructions:', recipe.instructions.length);
       
       if (nextStep < recipe.instructions.length) {
+        console.log('Setting currentStep from', currentStep, 'to', nextStep);
         setCurrentStep(nextStep);
-        speak(`Step ${nextStep + 1}: ${recipe.instructions[nextStep]}`);
+        
+        // Use setTimeout to ensure state update has processed
+        setTimeout(() => {
+          console.log('State updated - currentStep should now be:', nextStep);
+          speak(`Step ${nextStep + 1}: ${recipe.instructions[nextStep]}`);
+        }, 100);
       } else {
         speak("Congratulations! You've completed the recipe. Enjoy your meal!");
       }
