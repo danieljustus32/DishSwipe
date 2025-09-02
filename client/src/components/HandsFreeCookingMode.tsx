@@ -77,6 +77,7 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
   const speechQueueRef = useRef<string[]>([]);
   const isProcessingQueueRef = useRef(false);
   const currentStepRef = useRef(0);
+  const phaseRef = useRef<CookingPhase>('preparation');
   const { toast } = useToast();
 
   useEffect(() => {
@@ -246,10 +247,14 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
     }
   }, [isOpen, recipe.title]);
 
-  // Sync currentStep state with ref
+  // Sync currentStep and phase state with refs
   useEffect(() => {
     currentStepRef.current = currentStep;
   }, [currentStep]);
+
+  useEffect(() => {
+    phaseRef.current = phase;
+  }, [phase]);
 
   const speak = async (text: string) => {
     if (!text || isPaused) return;
@@ -432,9 +437,10 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
 
   const handleNext = () => {
     const currentStepValue = currentStepRef.current;
-    console.log('handleNext called - phase:', phase, 'currentStep:', currentStepValue);
+    const currentPhase = phaseRef.current;
+    console.log('handleNext called - phase:', currentPhase, 'currentStep:', currentStepValue);
     
-    if (phase === 'preparation') {
+    if (currentPhase === 'preparation') {
       // Mark current ingredient as complete before moving to next
       const currentIngredientId = recipe.ingredients[currentStepValue].id;
       setCompletedIngredients(prev => new Set(Array.from(prev).concat([currentIngredientId])));
@@ -503,7 +509,9 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
   const handleStartCooking = () => {
     console.log('Starting cooking phase - transitioning from preparation');
     setPhase('cooking');
+    phaseRef.current = 'cooking';
     setCurrentStep(0);
+    currentStepRef.current = 0;
     speak(`Starting cooking phase! Step 1: ${recipe.instructions[0]}`);
   };
 
