@@ -203,6 +203,7 @@ const passwordSchema = z.string()
   .regex(/[!@#$%^&*(),.?":{}|<>]/, "Password must contain at least one special character");
 
 // Email/password authentication schemas
+// Client-side registration schema with password confirmation
 export const registerSchema = z.object({
   email: z.string().email("Invalid email address"),
   password: passwordSchema,
@@ -212,6 +213,14 @@ export const registerSchema = z.object({
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"],
+});
+
+// Server-side registration schema without password confirmation
+export const serverRegisterSchema = z.object({
+  email: z.string().email("Invalid email address"),
+  password: passwordSchema,
+  firstName: z.string().min(1, "First name is required").max(50, "First name too long"),
+  lastName: z.string().min(1, "Last name is required").max(50, "Last name too long"),
 });
 
 export const loginSchema = z.object({
