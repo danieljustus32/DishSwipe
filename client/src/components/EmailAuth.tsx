@@ -102,6 +102,10 @@ export function EmailAuth({ onSuccess }: EmailAuthProps) {
     mutationFn: async (data: RegisterData) => {
       // Remove confirmPassword before sending to server
       const { confirmPassword, ...registerData } = data;
+      
+      // Debug: log what we're sending
+      console.log("Sending registration data:", registerData);
+      
       const response = await fetch("/api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

@@ -492,8 +492,10 @@ export async function setupAuth(app: Express) {
       const { hashPassword } = await import("./passwordUtils");
       
       // Validate request body
+      console.log("Received registration data:", req.body);
       const validationResult = registerSchema.safeParse(req.body);
       if (!validationResult.success) {
+        console.log("Validation failed:", validationResult.error.errors);
         return res.status(400).json({ 
           message: "Validation failed", 
           errors: validationResult.error.errors 
