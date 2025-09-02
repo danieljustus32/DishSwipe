@@ -78,16 +78,30 @@ export function useOnboarding() {
 
   // Load completed tutorials from localStorage on component mount
   useEffect(() => {
+    if (!user) return;
+    
     try {
       const saved = localStorage.getItem('flavorswipe-completed-tutorials');
-      if (saved) {
+      const savedUserId = localStorage.getItem('flavorswipe-tutorial-user-id');
+      
+      // If this is a different user, clear tutorial completion data
+      if (savedUserId && savedUserId !== user.id) {
+        console.log('Different user detected, clearing tutorial data');
+        localStorage.removeItem('flavorswipe-completed-tutorials');
+        localStorage.setItem('flavorswipe-tutorial-user-id', user.id);
+        setCompletedTutorials(new Set());
+      } else if (saved) {
         const tutorialArray = JSON.parse(saved);
         setCompletedTutorials(new Set(tutorialArray));
+        localStorage.setItem('flavorswipe-tutorial-user-id', user.id);
+      } else {
+        // First time for this user
+        localStorage.setItem('flavorswipe-tutorial-user-id', user.id);
       }
     } catch (error) {
       console.error('Failed to load completed tutorials from localStorage:', error);
     }
-  }, []);
+  }, [user]);
 
   // Save completed tutorials to localStorage whenever they change
   useEffect(() => {
