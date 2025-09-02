@@ -153,8 +153,7 @@ function transformSpoonacularRecipe(recipe: SpoonacularRecipe) {
 async function getUserFromRequest(req: any): Promise<any> {
   if (req.user.claims?.sub) {
     // Replit OIDC user
-    const user = await getUserFromRequest(req);
-    const userId = user.id;
+    const userId = req.user.claims.sub;
     return await storage.getUser(userId);
   } else if (req.user.provider && req.user.profile) {
     // Google or Apple user
