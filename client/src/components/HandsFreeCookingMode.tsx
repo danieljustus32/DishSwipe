@@ -99,14 +99,37 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
           const result = event.results[event.results.length - 1];
           if (result.isFinal) {
             const command = result[0].transcript.toLowerCase().trim();
-            // Only process non-empty commands
-            if (command.length > 0) {
+            // Only process non-empty commands and ignore if currently speaking
+            if (command.length > 0 && !isSpeaking) {
               console.log('Voice command received:', command);
-              handleVoiceCommand(command);
               
-              // Ensure we keep listening after processing command
-              // Don't stop listening - let it continue automatically
-              console.log('Command processed, maintaining listening state');
+              // Filter out phrases that sound like TTS feedback
+              const ttsFilterPhrases = [
+                'welcome to hands-free cooking',
+                'starting cooking phase',
+                'step 1',
+                'step 2', 
+                'step 3',
+                'step 4',
+                'step 5',
+                'next ingredient',
+                'measure',
+                'heat vegetable',
+                'voice recognition'
+              ];
+              
+              const isTTSFeedback = ttsFilterPhrases.some(phrase => 
+                command.includes(phrase) && command.length > phrase.length + 10
+              );
+              
+              if (!isTTSFeedback) {
+                handleVoiceCommand(command);
+                console.log('Command processed, maintaining listening state');
+              } else {
+                console.log('Filtered out TTS feedback:', command.substring(0, 50) + '...');
+              }
+            } else if (isSpeaking) {
+              console.log('Ignoring command while speaking:', command.substring(0, 30) + '...');
             }
           }
         };
@@ -317,7 +340,7 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
           } catch (error) {
             console.error('Error restarting recognition after TTS:', error);
           }
-        }, 500); // Small delay to ensure audio has fully stopped
+        }, 1500); // Longer delay to ensure audio has fully stopped and prevent feedback
       }
     } finally {
       isProcessingQueueRef.current = false;
@@ -326,8 +349,13 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
   };
 
   const handleVoiceCommand = (command: string) => {
+    // More strict matching - look for exact phrases or phrases at word boundaries
     const matchedCommand = voiceCommands.find(cmd => 
-      cmd.phrases.some(phrase => command.includes(phrase))
+      cmd.phrases.some(phrase => {
+        // Look for the phrase as a standalone word or at the beginning/end of the command
+        const regex = new RegExp(`\\b${phrase}\\b|^${phrase}|${phrase}$`, 'i');
+        return regex.test(command) && command.length <= phrase.length + 5; // Allow some buffer but prevent long TTS matches
+      })
     );
 
     if (!matchedCommand) {
