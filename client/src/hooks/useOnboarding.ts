@@ -81,6 +81,9 @@ export function useOnboarding() {
   useEffect(() => {
     if (!user) {
       setIsLoaded(false);
+      setIsTutorialActive(false);
+      setCurrentTutorial(null);
+      setCurrentStep(0);
       return;
     }
     
@@ -96,8 +99,16 @@ export function useOnboarding() {
         setCompletedTutorials(new Set());
       } else if (saved) {
         const tutorialArray = JSON.parse(saved);
-        setCompletedTutorials(new Set(tutorialArray));
+        const completedSet = new Set(tutorialArray);
+        setCompletedTutorials(completedSet);
         localStorage.setItem('flavorswipe-tutorial-user-id', user.id);
+        
+        // If all tutorials are completed, make sure tutorial is inactive
+        if (completedSet.has('welcome') && completedSet.has('cookbook') && completedSet.has('shopping')) {
+          setIsTutorialActive(false);
+          setCurrentTutorial(null);
+          setCurrentStep(0);
+        }
       } else {
         // First time for this user
         localStorage.setItem('flavorswipe-tutorial-user-id', user.id);
