@@ -15,13 +15,10 @@ import {
   Clock,
   Scale,
   ChefHat,
-  Volume2,
-  VolumeX,
-  Music
+  Volume2
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { formatQuantity } from "@/lib/utils";
-import { useCookingAudio } from "@/hooks/useCookingAudio";
 
 interface Recipe {
   id: string;
@@ -73,24 +70,13 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
   const [showCommands, setShowCommands] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [isSpeaking, setIsSpeaking] = useState(false);
-  const [showAudioControls, setShowAudioControls] = useState(false);
   
   const recognitionRef = useRef<any>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const currentStepRef = useRef(currentStep);
   const manuallyStoppedRef = useRef(false);
   const speechQueueRef = useRef<string[]>([]);
   const isProcessingQueueRef = useRef(false);
-  
-  // Audio system
-  const {
-    settings: audioSettings,
-    updateSettings: updateAudioSettings,
-    playSound,
-    startBackgroundMusic,
-    stopBackgroundMusic,
-    isPlayingMusic
-  } = useCookingAudio();
+  const currentStepRef = useRef(0);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -217,14 +203,6 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
 
   useEffect(() => {
     if (isOpen) {
-      // Start background music
-      if (audioSettings.musicEnabled) {
-        startBackgroundMusic();
-      }
-      
-      // Play welcome sound
-      playSound('phase-change');
-      
       speak("Welcome to hands-free cooking mode! I'll guide you through preparing " + recipe.title + ". Say 'help' to hear available commands.");
       
       // Start listening automatically when modal opens
@@ -265,11 +243,8 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
         audioRef.current.pause();
         audioRef.current.currentTime = 0;
       }
-      
-      // Stop background music
-      stopBackgroundMusic();
     }
-  }, [isOpen, recipe.title, audioSettings.musicEnabled, startBackgroundMusic, stopBackgroundMusic, playSound]);
+  }, [isOpen, recipe.title]);
 
   // Sync currentStep state with ref
   useEffect(() => {
@@ -462,7 +437,6 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
       const nextStep = currentStepValue + 1;
       
       if (nextStep < recipe.ingredients.length) {
-        playSound('step-complete');
         setCurrentStep(nextStep);
         currentStepRef.current = nextStep;
         
@@ -470,20 +444,17 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
         const formattedAmount = formatQuantity(`${ingredient.amount} ${ingredient.unit}`);
         speak(`Next ingredient: Measure ${formattedAmount} of ${ingredient.name}.`);
       } else {
-        playSound('success');
         speak("All ingredients measured! Say 'start cooking' to begin the cooking instructions.");
       }
     } else {
       const nextStep = currentStepValue + 1;
       
       if (nextStep < recipe.instructions.length) {
-        playSound('step-complete');
         setCurrentStep(nextStep);
         currentStepRef.current = nextStep;
         
         speak(`Step ${nextStep + 1}: ${recipe.instructions[nextStep]}`);
       } else {
-        playSound('success');
         speak("Congratulations! You've completed the recipe. Enjoy your meal!");
       }
     }
@@ -491,7 +462,6 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
 
   const handlePrevious = () => {
     if (currentStep > 0) {
-      playSound('step-complete');
       const prevStep = currentStep - 1;
       setCurrentStep(prevStep);
       
@@ -503,7 +473,6 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
         speak(`Step ${prevStep + 1}: ${recipe.instructions[prevStep]}`);
       }
     } else {
-      playSound('error');
       speak("This is the first step.");
     }
   };
@@ -520,7 +489,6 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
 
   const handleCompleteIngredient = () => {
     if (phase === 'preparation') {
-      playSound('ingredient-complete');
       const ingredientId = recipe.ingredients[currentStep].id;
       setCompletedIngredients(prev => new Set(Array.from(prev).concat([ingredientId])));
       speak("Ingredient marked as measured! Say 'next' for the next ingredient.");
@@ -529,7 +497,6 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
 
   const handleStartCooking = () => {
     console.log('Starting cooking phase - transitioning from preparation');
-    playSound('phase-change');
     setPhase('cooking');
     setCurrentStep(0);
     speak(`Starting cooking phase! Step 1: ${recipe.instructions[0]}`);
@@ -660,107 +627,6 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
                       <span className="text-muted-foreground text-xs">{cmd.description}</span>
                     </div>
                   ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Audio Controls */}
-          <Card className="border-2 border-dashed border-blue-500/20">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <Music className="w-5 h-5 text-blue-500" />
-                  <span className="font-medium">Audio Settings</span>
-                  {isPlayingMusic && (
-                    <Badge variant="secondary" className="animate-pulse bg-blue-100">
-                      Playing
-                    </Badge>
-                  )}
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowAudioControls(!showAudioControls)}
-                  className="px-3"
-                >
-                  {showAudioControls ? "Hide" : "Settings"}
-                </Button>
-              </div>
-
-              <div className="flex gap-2 flex-wrap mb-3">
-                <Button
-                  variant={audioSettings.soundEnabled ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => updateAudioSettings({ soundEnabled: !audioSettings.soundEnabled })}
-                  className="flex items-center gap-1"
-                >
-                  {audioSettings.soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
-                  Sound Effects
-                </Button>
-                <Button
-                  variant={audioSettings.musicEnabled ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => {
-                    const newMusicEnabled = !audioSettings.musicEnabled;
-                    updateAudioSettings({ musicEnabled: newMusicEnabled });
-                    if (newMusicEnabled && isOpen) {
-                      startBackgroundMusic();
-                    } else {
-                      stopBackgroundMusic();
-                    }
-                  }}
-                  className="flex items-center gap-1"
-                >
-                  <Music className="w-4 h-4" />
-                  Background Music
-                </Button>
-              </div>
-
-              {showAudioControls && (
-                <div className="space-y-3 pt-2 border-t">
-                  <div>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span>Sound Effects Volume</span>
-                      <span>{Math.round(audioSettings.soundVolume * 100)}%</span>
-                    </div>
-                    <input
-                      type="range"
-                      min="0"
-                      max="1"
-                      step="0.1"
-                      value={audioSettings.soundVolume}
-                      onChange={(e) => updateAudioSettings({ soundVolume: parseFloat(e.target.value) })}
-                      className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                    />
-                  </div>
-                  <div>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span>Music Volume</span>
-                      <span>{Math.round(audioSettings.musicVolume * 100)}%</span>
-                    </div>
-                    <input
-                      type="range"
-                      min="0"
-                      max="1"
-                      step="0.1"
-                      value={audioSettings.musicVolume}
-                      onChange={(e) => {
-                        const newVolume = parseFloat(e.target.value);
-                        updateAudioSettings({ musicVolume: newVolume });
-                        // Restart music with new volume if playing
-                        if (isPlayingMusic) {
-                          stopBackgroundMusic();
-                          setTimeout(() => {
-                            if (audioSettings.musicEnabled) {
-                              startBackgroundMusic();
-                            }
-                          }, 100);
-                        }
-                      }}
-                      className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                    />
-                  </div>
                 </div>
               )}
             </CardContent>
