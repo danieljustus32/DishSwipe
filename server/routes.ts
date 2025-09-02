@@ -156,20 +156,29 @@ async function getUserFromRequest(req: any): Promise<any> {
     const userId = req.user.claims.sub;
     return await storage.getUser(userId);
   } else if (req.user.provider && req.user.profile) {
-    // Google or Apple user
     const provider = req.user.provider;
     const profile = req.user.profile;
     
-    const providerId = provider === 'google' ? profile.id : 
-                      provider === 'apple' ? (profile.id || profile.sub) : null;
-    
-    if (providerId) {
-      const user = await storage.getUserByProviderId(providerId, provider);
+    if (provider === 'email') {
+      // Email/password user - look up by user ID
+      const user = await storage.getUser(profile.id);
       if (user) {
         return user;
       }
+      throw new Error(`Email user not found: ${profile.id}`);
+    } else {
+      // Google or Apple user
+      const providerId = provider === 'google' ? profile.id : 
+                        provider === 'apple' ? (profile.id || profile.sub) : null;
+      
+      if (providerId) {
+        const user = await storage.getUserByProviderId(providerId, provider);
+        if (user) {
+          return user;
+        }
+      }
+      throw new Error(`User not found for ${provider} provider`);
     }
-    throw new Error(`User not found for ${provider} provider`);
   } else {
     throw new Error("Invalid user session");
   }

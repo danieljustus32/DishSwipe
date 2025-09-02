@@ -18,8 +18,6 @@ export function EmailAuth({ onSuccess }: EmailAuthProps) {
   const [isLogin, setIsLogin] = useState(true);
   const { toast } = useToast();
   
-  // Add simple state for debugging
-  const [testEmail, setTestEmail] = useState("");
 
   const loginForm = useForm<LoginData>({
     resolver: zodResolver(loginSchema),
@@ -123,18 +121,6 @@ export function EmailAuth({ onSuccess }: EmailAuthProps) {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        {/* Debug test input */}
-        <div className="mb-4 p-3 bg-gray-100 rounded">
-          <label className="block text-sm font-medium mb-2">Test Input (Debug):</label>
-          <input
-            type="email"
-            placeholder="Test if this input works..."
-            value={testEmail}
-            onChange={(e) => setTestEmail(e.target.value)}
-            className="w-full p-2 border border-gray-300 rounded"
-          />
-          <div className="text-xs text-gray-600 mt-1">Value: {testEmail}</div>
-        </div>
         {isLogin ? (
           <Form {...loginForm}>
             <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
