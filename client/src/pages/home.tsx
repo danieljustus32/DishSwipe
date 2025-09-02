@@ -64,7 +64,8 @@ export default function Home() {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [currentRecipeIndex, setCurrentRecipeIndex] = useState(0);
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
-  const [isLoadingRecipes, setIsLoadingRecipes] = useState(false);
+  const [isLoadingRecipes, setIsLoadingRecipes] = useState(true);
+  const [isAppInitialized, setIsAppInitialized] = useState(false);
   
   // Onboarding tutorial
   const { 
@@ -100,10 +101,13 @@ export default function Home() {
     }
   }, [user, isLoading, toast]);
 
-  // Load initial recipes
+  // Load initial recipes and initialize app
   useEffect(() => {
     if (user) {
-      loadRecipes();
+      loadRecipes().finally(() => {
+        // Add a small delay to ensure smooth loading experience
+        setTimeout(() => setIsAppInitialized(true), 300);
+      });
     }
   }, [user]);
 
@@ -252,6 +256,18 @@ export default function Home() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show loading screen while app is initializing
+  if (!isAppInitialized) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 to-red-50 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground text-lg">Preparing your recipes...</p>
         </div>
       </div>
     );
