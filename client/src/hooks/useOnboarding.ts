@@ -75,10 +75,14 @@ export function useOnboarding() {
   const [currentStep, setCurrentStep] = useState(0);
   const [isTutorialActive, setIsTutorialActive] = useState(false);
   const [completedTutorials, setCompletedTutorials] = useState<Set<TutorialType>>(new Set());
+  const [isLoaded, setIsLoaded] = useState(false);
 
   // Load completed tutorials from localStorage on component mount
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      setIsLoaded(false);
+      return;
+    }
     
     try {
       const saved = localStorage.getItem('flavorswipe-completed-tutorials');
@@ -98,8 +102,11 @@ export function useOnboarding() {
         // First time for this user
         localStorage.setItem('flavorswipe-tutorial-user-id', user.id);
       }
+      
+      setIsLoaded(true);
     } catch (error) {
       console.error('Failed to load completed tutorials from localStorage:', error);
+      setIsLoaded(true);
     }
   }, [user]);
 
@@ -115,7 +122,7 @@ export function useOnboarding() {
 
   // Show tutorial based on environment variable setting
   useEffect(() => {
-    if (!user) return;
+    if (!user || !isLoaded) return;
     
     const showTutorialForTesting = import.meta.env.VITE_TUTORIAL_TESTING === 'true';
     console.log('Tutorial Testing Mode:', showTutorialForTesting);
@@ -150,7 +157,7 @@ export function useOnboarding() {
         console.log('Tutorial already completed or active');
       }
     }
-  }, [user, completedTutorials, isTutorialActive]);
+  }, [user, completedTutorials, isTutorialActive, isLoaded]);
 
   const startTutorial = async (tutorialType: TutorialType) => {
     // Don't start tutorial if already completed (unless in testing mode)
