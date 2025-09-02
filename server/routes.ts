@@ -676,7 +676,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         console.log('Saved recipe:', savedRecipe);
         console.log('Calling saveUserRecipe with userId:', userId, 'recipeId:', savedRecipe.id);
-        await storage.saveUserRecipe(userId, savedRecipe.id);
+        await storage.saveUserRecipe({ userId, recipeId: savedRecipe.id });
       }
       
       res.json({ message: "Tutorial cookbook data loaded" });
