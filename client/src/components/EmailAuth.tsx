@@ -50,7 +50,11 @@ export function EmailAuth({ onSuccess }: EmailAuthProps) {
       
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || "Login failed");
+        
+        // Create a detailed error with status
+        const detailedError = new Error(error.message || "Login failed");
+        (detailedError as any).status = response.status;
+        throw detailedError;
       }
       
       return response.json();
@@ -64,10 +68,31 @@ export function EmailAuth({ onSuccess }: EmailAuthProps) {
       // Redirect to home page
       window.location.href = "/";
     },
-    onError: (error: Error) => {
+    onError: (error: any) => {
+      let title = "Login failed";
+      let description = error.message;
+      
+      // Handle specific error cases with better messages
+      if (error.status === 401) {
+        title = "Incorrect login";
+        description = "The email or password you entered is incorrect. Please try again or create a new account.";
+      } else if (error.status === 404) {
+        title = "Account not found";
+        description = "We couldn't find an account with that email. Would you like to create one instead?";
+      } else if (error.status === 400) {
+        title = "Invalid information";
+        description = "Please enter a valid email address and password.";
+      } else if (error.status === 500) {
+        title = "Server error";
+        description = "Something went wrong on our end. Please try again in a moment.";
+      } else if (error.message.includes("Failed to fetch") || error.message.includes("NetworkError")) {
+        title = "Connection error";
+        description = "Please check your internet connection and try again.";
+      }
+      
       toast({
-        title: "Login failed",
-        description: error.message,
+        title,
+        description,
         variant: "destructive",
       });
     },
@@ -85,7 +110,12 @@ export function EmailAuth({ onSuccess }: EmailAuthProps) {
       
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || "Registration failed");
+        
+        // Create a detailed error with status and response data
+        const detailedError = new Error(error.message || "Registration failed");
+        (detailedError as any).status = response.status;
+        (detailedError as any).errors = error.errors;
+        throw detailedError;
       }
       
       return response.json();
@@ -99,10 +129,58 @@ export function EmailAuth({ onSuccess }: EmailAuthProps) {
       // Redirect to home page
       window.location.href = "/";
     },
-    onError: (error: Error) => {
+    onError: (error: any) => {
+      let title = "Registration failed";
+      let description = error.message;
+      
+      // Handle specific error cases with better messages
+      if (error.status === 409) {
+        title = "Account already exists";
+        description = "An account with that email already exists. Did you mean to sign in instead?";
+        
+        // Automatically switch to login and prefill email for convenience
+        const currentEmail = registerForm.getValues("email");
+        setTimeout(() => {
+          setIsLogin(true);
+          loginForm.setValue("email", currentEmail);
+        }, 2000); // Small delay to let user read the message
+      } else if (error.status === 400 && error.errors) {
+        // Handle validation errors
+        const validationErrors = error.errors;
+        const passwordError = validationErrors.find((err: any) => 
+          err.path?.includes("password") || err.path?.includes("confirmPassword")
+        );
+        const emailError = validationErrors.find((err: any) => 
+          err.path?.includes("email")
+        );
+        const nameError = validationErrors.find((err: any) => 
+          err.path?.includes("firstName") || err.path?.includes("lastName")
+        );
+        
+        if (passwordError) {
+          title = "Password issue";
+          description = passwordError.message;
+        } else if (emailError) {
+          title = "Email issue";
+          description = emailError.message;
+        } else if (nameError) {
+          title = "Name required";
+          description = nameError.message;
+        } else {
+          title = "Invalid information";
+          description = "Please check your information and try again.";
+        }
+      } else if (error.status === 500) {
+        title = "Server error";
+        description = "Something went wrong on our end. Please try again in a moment.";
+      } else if (error.message.includes("Failed to fetch") || error.message.includes("NetworkError")) {
+        title = "Connection error";
+        description = "Please check your internet connection and try again.";
+      }
+      
       toast({
-        title: "Registration failed",
-        description: error.message,
+        title,
+        description,
         variant: "destructive",
       });
     },
