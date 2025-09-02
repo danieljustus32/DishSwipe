@@ -235,26 +235,20 @@ export function EmailAuth({ onSuccess }: EmailAuthProps) {
                   )}
                 />
               </div>
-              <FormField
-                control={registerForm.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <Input
-                      type="email"
-                      placeholder="Enter your email"
-                      data-testid="input-register-email"
-                      value={field.value || ""}
-                      onChange={field.onChange}
-                      onBlur={field.onBlur}
-                      name={field.name}
-                      autoComplete="email"
-                    />
-                    <FormMessage />
-                  </FormItem>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Email</label>
+                <Input
+                  type="email"
+                  placeholder="Enter your email"
+                  data-testid="input-register-email"
+                  value={registerForm.watch("email") || ""}
+                  onChange={(e) => registerForm.setValue("email", e.target.value)}
+                  autoComplete="email"
+                />
+                {registerForm.formState.errors.email && (
+                  <p className="text-sm text-red-600">{registerForm.formState.errors.email.message}</p>
                 )}
-              />
+              </div>
               <FormField
                 control={registerForm.control}
                 name="password"
