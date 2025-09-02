@@ -151,18 +151,24 @@ function transformSpoonacularRecipe(recipe: SpoonacularRecipe) {
 
 // Helper function to get user ID from any authentication provider
 async function getUserFromRequest(req: any): Promise<any> {
+  console.log('getUserFromRequest - req.user:', req.user);
+  
   if (req.user.claims?.sub) {
     // Replit OIDC user
     const userId = req.user.claims.sub;
+    console.log('Replit user ID:', userId);
     return await storage.getUser(userId);
   } else if (req.user.provider && req.user.profile) {
     const provider = req.user.provider;
     const profile = req.user.profile;
+    console.log('Provider:', provider, 'Profile:', profile);
     
     if (provider === 'email') {
       // Email/password user - look up by user ID
+      console.log('Looking up email user with ID:', profile.id);
       const user = await storage.getUser(profile.id);
       if (user) {
+        console.log('Found email user:', user);
         return user;
       }
       throw new Error(`Email user not found: ${profile.id}`);
@@ -651,6 +657,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const user = await getUserFromRequest(req);
       const userId = user.id;
+      console.log('Tutorial cookbook data - User:', user);
+      console.log('Tutorial cookbook data - UserId:', userId);
       
       // Add mock cookbook recipes for tutorial
       for (const recipe of mockCookbookRecipes) {
@@ -666,6 +674,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           nutrition: recipe.nutrition,
         });
         
+        console.log('Saved recipe:', savedRecipe);
+        console.log('Calling saveUserRecipe with userId:', userId, 'recipeId:', savedRecipe.id);
         await storage.saveUserRecipe(userId, savedRecipe.id);
       }
       
@@ -680,17 +690,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const user = await getUserFromRequest(req);
       const userId = user.id;
+      console.log('Tutorial shopping data - User:', user);
+      console.log('Tutorial shopping data - UserId:', userId);
       
       // Add mock shopping list items for tutorial
       for (const item of mockShoppingListItems) {
-        await storage.addShoppingListItem({
+        const itemToAdd = {
           userId,
           name: item.name,
           amount: item.amount,
           aisle: item.aisle,
           checked: item.checked,
           recipeId: item.recipeId,
-        });
+        };
+        console.log('Adding shopping item:', itemToAdd);
+        await storage.addShoppingListItem(itemToAdd);
       }
       
       res.json({ message: "Tutorial shopping data loaded" });
