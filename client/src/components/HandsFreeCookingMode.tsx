@@ -75,6 +75,7 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
   const manuallyStoppedRef = useRef(false);
   const speechQueueRef = useRef<string[]>([]);
   const isProcessingQueueRef = useRef(false);
+  const currentStepRef = useRef(0);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -244,9 +245,10 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
     }
   }, [isOpen, recipe.title]);
 
-  // Debug: Track currentStep changes
+  // Debug: Track currentStep changes and sync with ref
   useEffect(() => {
     console.log('currentStep state changed to:', currentStep, 'in phase:', phase);
+    currentStepRef.current = currentStep;
   }, [currentStep, phase]);
 
   const speak = async (text: string) => {
@@ -429,38 +431,33 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
   };
 
   const handleNext = () => {
-    console.log('handleNext called - current phase:', phase, 'current step:', currentStep);
+    const currentStepValue = currentStepRef.current;
+    console.log('handleNext called - current phase:', phase, 'current step from ref:', currentStepValue, 'current step from state:', currentStep);
     
     if (phase === 'preparation') {
-      const nextStep = currentStep + 1;
+      const nextStep = currentStepValue + 1;
       console.log('Preparation phase - next step would be:', nextStep, 'total ingredients:', recipe.ingredients.length);
       
       if (nextStep < recipe.ingredients.length) {
-        console.log('Setting currentStep from', currentStep, 'to', nextStep);
+        console.log('Setting currentStep from', currentStepValue, 'to', nextStep);
         setCurrentStep(nextStep);
+        currentStepRef.current = nextStep;
         
-        // Use setTimeout to ensure state update has processed
-        setTimeout(() => {
-          console.log('State updated - currentStep should now be:', nextStep);
-          const ingredient = recipe.ingredients[nextStep];
-          speak(`Next ingredient: Measure ${ingredient.amount} ${ingredient.unit} of ${ingredient.name}.`);
-        }, 100);
+        const ingredient = recipe.ingredients[nextStep];
+        speak(`Next ingredient: Measure ${ingredient.amount} ${ingredient.unit} of ${ingredient.name}.`);
       } else {
         speak("All ingredients measured! Say 'start cooking' to begin the cooking instructions.");
       }
     } else {
-      const nextStep = currentStep + 1;
+      const nextStep = currentStepValue + 1;
       console.log('Cooking phase - next step would be:', nextStep, 'total instructions:', recipe.instructions.length);
       
       if (nextStep < recipe.instructions.length) {
-        console.log('Setting currentStep from', currentStep, 'to', nextStep);
+        console.log('Setting currentStep from', currentStepValue, 'to', nextStep);
         setCurrentStep(nextStep);
+        currentStepRef.current = nextStep;
         
-        // Use setTimeout to ensure state update has processed
-        setTimeout(() => {
-          console.log('State updated - currentStep should now be:', nextStep);
-          speak(`Step ${nextStep + 1}: ${recipe.instructions[nextStep]}`);
-        }, 100);
+        speak(`Step ${nextStep + 1}: ${recipe.instructions[nextStep]}`);
       } else {
         speak("Congratulations! You've completed the recipe. Enjoy your meal!");
       }
