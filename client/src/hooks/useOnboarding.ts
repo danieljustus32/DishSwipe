@@ -140,8 +140,8 @@ export function useOnboarding() {
         setCurrentTutorial('welcome');
         setCurrentStep(0);
         setIsTutorialActive(true);
-      } else if (completedTutorials.has('welcome') && isTutorialActive) {
-        // If all tutorials are completed but tutorial is still active, deactivate it
+      } else if (completedTutorials.has('welcome') && completedTutorials.has('cookbook') && completedTutorials.has('shopping') && isTutorialActive) {
+        // If ALL tutorials are completed but tutorial is still active, deactivate it
         console.log('All tutorials completed, deactivating tutorial');
         setIsTutorialActive(false);
         setCurrentTutorial(null);
