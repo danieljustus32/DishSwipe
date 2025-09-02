@@ -382,7 +382,7 @@ export default function Home() {
         )}
 
         {/* Onboarding Tutorial */}
-        {isTutorialActive && currentTutorial && !(completedTutorials.has('welcome') && completedTutorials.has('cookbook') && completedTutorials.has('shopping')) && (
+        {isTutorialActive && currentTutorial && (
           <OnboardingTutorial
             tutorial={currentTutorial}
             step={currentStep}

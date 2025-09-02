@@ -238,10 +238,14 @@ export function useOnboarding() {
     await endTutorial();
   };
 
+  // Computed value to ensure tutorial is never shown if all are completed
+  const shouldShowTutorial = isLoaded && isTutorialActive && currentTutorial && 
+    !(completedTutorials.has('welcome') && completedTutorials.has('cookbook') && completedTutorials.has('shopping'));
+
   return {
     currentTutorial: currentTutorial ? tutorials[currentTutorial] : null,
     currentStep,
-    isTutorialActive,
+    isTutorialActive: shouldShowTutorial,
     startTutorial,
     nextStep,
     skipTutorial,
