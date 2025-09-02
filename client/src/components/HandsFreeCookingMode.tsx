@@ -18,6 +18,7 @@ import {
   Volume2
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { formatQuantity } from "@/lib/utils";
 
 interface Recipe {
   id: string;
@@ -245,11 +246,10 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
     }
   }, [isOpen, recipe.title]);
 
-  // Debug: Track currentStep changes and sync with ref
+  // Sync currentStep state with ref
   useEffect(() => {
-    console.log('currentStep state changed to:', currentStep, 'in phase:', phase);
     currentStepRef.current = currentStep;
-  }, [currentStep, phase]);
+  }, [currentStep]);
 
   const speak = async (text: string) => {
     if (!text || isPaused) return;
@@ -432,28 +432,24 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
 
   const handleNext = () => {
     const currentStepValue = currentStepRef.current;
-    console.log('handleNext called - current phase:', phase, 'current step from ref:', currentStepValue, 'current step from state:', currentStep);
     
     if (phase === 'preparation') {
       const nextStep = currentStepValue + 1;
-      console.log('Preparation phase - next step would be:', nextStep, 'total ingredients:', recipe.ingredients.length);
       
       if (nextStep < recipe.ingredients.length) {
-        console.log('Setting currentStep from', currentStepValue, 'to', nextStep);
         setCurrentStep(nextStep);
         currentStepRef.current = nextStep;
         
         const ingredient = recipe.ingredients[nextStep];
-        speak(`Next ingredient: Measure ${ingredient.amount} ${ingredient.unit} of ${ingredient.name}.`);
+        const formattedAmount = formatQuantity(`${ingredient.amount} ${ingredient.unit}`);
+        speak(`Next ingredient: Measure ${formattedAmount} of ${ingredient.name}.`);
       } else {
         speak("All ingredients measured! Say 'start cooking' to begin the cooking instructions.");
       }
     } else {
       const nextStep = currentStepValue + 1;
-      console.log('Cooking phase - next step would be:', nextStep, 'total instructions:', recipe.instructions.length);
       
       if (nextStep < recipe.instructions.length) {
-        console.log('Setting currentStep from', currentStepValue, 'to', nextStep);
         setCurrentStep(nextStep);
         currentStepRef.current = nextStep;
         
@@ -471,7 +467,8 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
       
       if (phase === 'preparation') {
         const ingredient = recipe.ingredients[prevStep];
-        speak(`Previous ingredient: Measure ${ingredient.amount} ${ingredient.unit} of ${ingredient.name}.`);
+        const formattedAmount = formatQuantity(`${ingredient.amount} ${ingredient.unit}`);
+        speak(`Previous ingredient: Measure ${formattedAmount} of ${ingredient.name}.`);
       } else {
         speak(`Step ${prevStep + 1}: ${recipe.instructions[prevStep]}`);
       }
@@ -483,7 +480,8 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
   const handleRepeat = () => {
     if (phase === 'preparation') {
       const ingredient = recipe.ingredients[currentStep];
-      speak(`Current ingredient: Measure ${ingredient.amount} ${ingredient.unit} of ${ingredient.name}.`);
+      const formattedAmount = formatQuantity(`${ingredient.amount} ${ingredient.unit}`);
+      speak(`Current ingredient: Measure ${formattedAmount} of ${ingredient.name}.`);
     } else {
       speak(`Current step: ${recipe.instructions[currentStep]}`);
     }
@@ -646,7 +644,7 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
                     <div className="flex items-center gap-2 text-lg">
                       <Scale className="w-5 h-5 text-orange-500" />
                       <span className="font-medium">
-                        {getCurrentIngredient()?.amount} {getCurrentIngredient()?.unit}
+                        {formatQuantity(`${getCurrentIngredient()?.amount} ${getCurrentIngredient()?.unit}`)}
                       </span>
                       <span>of</span>
                       <span className="font-semibold text-primary">
