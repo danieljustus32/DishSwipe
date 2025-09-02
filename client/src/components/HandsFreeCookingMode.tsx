@@ -768,7 +768,7 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
                       }`}
                     >
                       <span className="flex-1 pr-2">
-                        {ingredient.amount} {ingredient.unit} {ingredient.name}
+                        {formatQuantity(`${ingredient.amount} ${ingredient.unit}`)} {ingredient.name}
                       </span>
                       {completedIngredients.has(ingredient.id) && (
                         <CheckCircle2 className="w-3 h-3 sm:w-4 sm:h-4 text-green-500 flex-shrink-0" />
