@@ -441,7 +441,11 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
         currentStepRef.current = nextStep;
         
         const ingredient = recipe.ingredients[nextStep];
-        const formattedAmount = formatQuantity(`${ingredient.amount} ${ingredient.unit}`);
+        console.log('Raw ingredient data:', { amount: ingredient.amount, unit: ingredient.unit, name: ingredient.name });
+        const rawInput = `${ingredient.amount} ${ingredient.unit}`;
+        console.log('Raw input to formatQuantity:', rawInput);
+        const formattedAmount = formatQuantity(rawInput);
+        console.log('Formatted amount:', formattedAmount);
         speak(`Next ingredient: Measure ${formattedAmount} of ${ingredient.name}.`);
       } else {
         speak("All ingredients measured! Say 'start cooking' to begin the cooking instructions.");
