@@ -17,6 +17,9 @@ interface EmailAuthProps {
 export function EmailAuth({ onSuccess }: EmailAuthProps) {
   const [isLogin, setIsLogin] = useState(true);
   const { toast } = useToast();
+  
+  // Add simple state for debugging
+  const [testEmail, setTestEmail] = useState("");
 
   const loginForm = useForm<LoginData>({
     resolver: zodResolver(loginSchema),
@@ -24,6 +27,7 @@ export function EmailAuth({ onSuccess }: EmailAuthProps) {
       email: "",
       password: "",
     },
+    mode: "onChange"
   });
 
   const registerForm = useForm<RegisterData>({
@@ -34,6 +38,7 @@ export function EmailAuth({ onSuccess }: EmailAuthProps) {
       firstName: "",
       lastName: "",
     },
+    mode: "onChange"
   });
 
   const loginMutation = useMutation({
@@ -118,6 +123,18 @@ export function EmailAuth({ onSuccess }: EmailAuthProps) {
         </CardTitle>
       </CardHeader>
       <CardContent>
+        {/* Debug test input */}
+        <div className="mb-4 p-3 bg-gray-100 rounded">
+          <label className="block text-sm font-medium mb-2">Test Input (Debug):</label>
+          <input
+            type="email"
+            placeholder="Test if this input works..."
+            value={testEmail}
+            onChange={(e) => setTestEmail(e.target.value)}
+            className="w-full p-2 border border-gray-300 rounded"
+          />
+          <div className="text-xs text-gray-600 mt-1">Value: {testEmail}</div>
+        </div>
         {isLogin ? (
           <Form {...loginForm}>
             <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
@@ -224,17 +241,16 @@ export function EmailAuth({ onSuccess }: EmailAuthProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="email"
-                        placeholder="Enter your email"
-                        data-testid="input-register-email"
-                        value={field.value}
-                        onChange={field.onChange}
-                        onBlur={field.onBlur}
-                        name={field.name}
-                      />
-                    </FormControl>
+                    <Input
+                      type="email"
+                      placeholder="Enter your email"
+                      data-testid="input-register-email"
+                      value={field.value || ""}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+                      name={field.name}
+                      autoComplete="email"
+                    />
                     <FormMessage />
                   </FormItem>
                 )}
