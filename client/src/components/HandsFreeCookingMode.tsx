@@ -434,6 +434,10 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
     const currentStepValue = currentStepRef.current;
     
     if (phase === 'preparation') {
+      // Mark current ingredient as complete before moving to next
+      const currentIngredientId = recipe.ingredients[currentStepValue].id;
+      setCompletedIngredients(prev => new Set(Array.from(prev).concat([currentIngredientId])));
+      
       const nextStep = currentStepValue + 1;
       
       if (nextStep < recipe.ingredients.length) {
