@@ -64,9 +64,19 @@ const voiceCommands: VoiceCommand[] = [
 const formatIngredientDescription = (amount: number, unit: string, name: string): string => {
   const formattedAmount = formatQuantity(`${amount} ${unit}`);
   
-  // If the unit contains descriptive words like "pieces", "slices", etc., use "of"
-  const descriptiveUnits = ['piece', 'pieces', 'slice', 'slices', 'strip', 'strips', 'chunk', 'chunks', 'clove', 'cloves'];
-  const shouldUseOf = descriptiveUnits.some(descriptiveUnit => unit.toLowerCase().includes(descriptiveUnit));
+  // Common measurement units that should use "of"
+  const measurementUnits = [
+    // Volume
+    'teaspoon', 'teaspoons', 'tsp', 'tablespoon', 'tablespoons', 'tbsp', 'cup', 'cups', 'pint', 'pints', 'quart', 'quarts', 'gallon', 'gallons',
+    'liter', 'liters', 'litre', 'litres', 'ml', 'milliliter', 'milliliters', 'millilitre', 'millilitres', 'fl oz', 'fluid ounce', 'fluid ounces',
+    // Weight
+    'gram', 'grams', 'g', 'kilogram', 'kilograms', 'kg', 'ounce', 'ounces', 'oz', 'pound', 'pounds', 'lb', 'lbs',
+    // Descriptive units
+    'piece', 'pieces', 'slice', 'slices', 'strip', 'strips', 'chunk', 'chunks', 'clove', 'cloves', 'bunch', 'bunches',
+    'head', 'heads', 'stalk', 'stalks', 'sprig', 'sprigs', 'dash', 'dashes', 'pinch', 'pinches', 'handful', 'handfuls'
+  ];
+  
+  const shouldUseOf = measurementUnits.some(measurementUnit => unit.toLowerCase().includes(measurementUnit));
   
   if (shouldUseOf) {
     return `${formattedAmount} of ${name}`;
