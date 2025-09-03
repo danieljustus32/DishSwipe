@@ -549,7 +549,7 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-[calc(100vw-10px)] max-w-4xl h-[calc(100vh-10px)] max-h-[95vh] overflow-y-auto p-4 sm:p-6">
+      <DialogContent className="w-full max-w-4xl h-[100dvh] sm:h-[95vh] sm:max-h-[95vh] overflow-y-auto p-3 sm:p-6 mx-2 sm:mx-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <ChefHat className="w-5 h-5" />
@@ -589,37 +589,39 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
 
           {/* Voice Controls */}
           <Card className="border-2 border-dashed border-primary/20">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2 mr-4">
-                  <Volume2 className="w-5 h-5 text-primary" />
-                  <span className="font-medium">Voice Control</span>
-                  {isListening && (
-                    <Badge variant="secondary" className="animate-pulse">
-                      Listening...
-                    </Badge>
-                  )}
-                  {isSpeaking && (
-                    <Badge variant="outline" className="animate-pulse">
-                      Speaking...
-                    </Badge>
-                  )}
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-4">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Volume2 className="w-4 h-4 sm:w-5 sm:h-5 text-primary flex-shrink-0" />
+                  <span className="font-medium text-sm sm:text-base">Voice Control</span>
+                  <div className="flex gap-2 flex-wrap">
+                    {isListening && (
+                      <Badge variant="secondary" className="animate-pulse text-xs">
+                        Listening...
+                      </Badge>
+                    )}
+                    {isSpeaking && (
+                      <Badge variant="outline" className="animate-pulse text-xs">
+                        Speaking...
+                      </Badge>
+                    )}
+                  </div>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-shrink-0">
                   <Button
                     variant={isListening ? "destructive" : "default"}
                     size="sm"
                     onClick={isListening ? toggleListening : startListening}
-                    className="px-3"
+                    className="px-2 sm:px-3 text-xs sm:text-sm"
                   >
-                    {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                    {isListening ? <MicOff className="w-3 h-3 sm:w-4 sm:h-4" /> : <Mic className="w-3 h-3 sm:w-4 sm:h-4" />}
                     <span className="ml-1">{isListening ? "Stop" : "Start"}</span>
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => setShowCommands(!showCommands)}
-                    className="px-3"
+                    className="px-2 sm:px-3 text-xs sm:text-sm"
                   >
                     Help
                   </Button>
@@ -627,15 +629,15 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
               </div>
 
               {transcript && (
-                <div className="text-sm text-muted-foreground mb-2">
+                <div className="text-xs sm:text-sm text-muted-foreground mb-2 truncate">
                   Last command: "{transcript}"
                 </div>
               )}
 
               {showCommands && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                <div className="grid grid-cols-1 gap-2 text-xs">
                   {voiceCommands.map((cmd, index) => (
-                    <div key={index} className="flex flex-col sm:flex-row sm:justify-between p-2 bg-muted rounded gap-1">
+                    <div key={index} className="flex flex-col p-2 bg-muted rounded gap-1">
                       <span className="font-medium">"{cmd.phrases[0]}"</span>
                       <span className="text-muted-foreground text-xs">{cmd.description}</span>
                     </div>
@@ -648,25 +650,27 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
           {/* Current Step Display */}
           {phase === 'preparation' ? (
             <Card className="border-l-4 border-l-orange-500">
-              <CardContent className="p-6">
-                <div className="flex items-start justify-between mb-4">
-                  <div>
-                    <h3 className="text-xl font-semibold mb-2">
+              <CardContent className="p-4 sm:p-6">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4 mb-4">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-lg sm:text-xl font-semibold mb-2">
                       Ingredient {currentStep + 1} of {recipe.ingredients.length}
                     </h3>
-                    <div className="flex items-center gap-2 text-lg">
-                      <Scale className="w-5 h-5 text-orange-500" />
-                      <span className="font-medium">
-                        {formatQuantity(`${getCurrentIngredient()?.amount} ${getCurrentIngredient()?.unit}`)}
-                      </span>
-                      <span>of</span>
-                      <span className="font-semibold text-primary">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 text-base sm:text-lg">
+                      <div className="flex items-center gap-2">
+                        <Scale className="w-4 h-4 sm:w-5 sm:h-5 text-orange-500 flex-shrink-0" />
+                        <span className="font-medium">
+                          {formatQuantity(`${getCurrentIngredient()?.amount} ${getCurrentIngredient()?.unit}`)}
+                        </span>
+                      </div>
+                      <span className="hidden sm:inline">of</span>
+                      <span className="font-semibold text-primary break-words">
                         {getCurrentIngredient()?.name}
                       </span>
                     </div>
                   </div>
                   {completedIngredients.has(getCurrentIngredient()?.id) && (
-                    <CheckCircle2 className="w-8 h-8 text-green-500" />
+                    <CheckCircle2 className="w-6 h-6 sm:w-8 sm:h-8 text-green-500 flex-shrink-0" />
                   )}
                 </div>
 
@@ -676,9 +680,9 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
                     size="sm"
                     onClick={handlePrevious}
                     disabled={currentStep === 0}
-                    className="text-xs sm:text-sm"
+                    className="text-xs sm:text-sm px-2 sm:px-3"
                   >
-                    <SkipBack className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                    <SkipBack className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                     <span className="hidden sm:inline">Previous</span>
                     <span className="sm:hidden">Prev</span>
                   </Button>
@@ -687,9 +691,9 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
                     size="sm"
                     onClick={handleCompleteIngredient}
                     disabled={completedIngredients.has(getCurrentIngredient()?.id)}
-                    className="text-xs sm:text-sm"
+                    className="text-xs sm:text-sm px-2 sm:px-3"
                   >
-                    <CheckCircle2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                    <CheckCircle2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                     <span className="hidden sm:inline">Mark Complete</span>
                     <span className="sm:hidden">Done</span>
                   </Button>
@@ -698,20 +702,21 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
                     size="sm"
                     onClick={handleNext}
                     disabled={currentStep >= recipe.ingredients.length - 1}
-                    className="text-xs sm:text-sm"
+                    className="text-xs sm:text-sm px-2 sm:px-3"
                   >
                     <span className="hidden sm:inline">Next</span>
                     <span className="sm:hidden">Next</span>
-                    <SkipForward className="w-3 h-3 sm:w-4 sm:h-4 ml-1 sm:ml-2" />
+                    <SkipForward className="w-3 h-3 sm:w-4 sm:h-4 ml-1" />
                   </Button>
                   {completedIngredients.size === recipe.ingredients.length && (
                     <Button
                       variant="default"
-                      className="bg-green-600 hover:bg-green-700 text-xs sm:text-sm"
+                      className="bg-green-600 hover:bg-green-700 text-xs sm:text-sm px-2 sm:px-3"
                       onClick={handleStartCooking}
                     >
-                      <Play className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                      Start Cooking!
+                      <Play className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                      <span className="hidden sm:inline">Start Cooking!</span>
+                      <span className="sm:hidden">Cook</span>
                     </Button>
                   )}
                 </div>
@@ -719,31 +724,31 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
             </Card>
           ) : (
             <Card className="border-l-4 border-l-green-500">
-              <CardContent className="p-6">
-                <div className="flex items-start justify-between mb-4">
-                  <div>
-                    <h3 className="text-xl font-semibold mb-2">
+              <CardContent className="p-4 sm:p-6">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4 mb-4">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-lg sm:text-xl font-semibold mb-2">
                       Step {currentStep + 1} of {recipe.instructions.length}
                     </h3>
-                    <p className="text-lg leading-relaxed">
+                    <p className="text-base sm:text-lg leading-relaxed break-words">
                       {recipe.instructions[currentStep]}
                     </p>
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Clock className="w-4 h-4" />
+                  <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground flex-shrink-0">
+                    <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
                     <span>~{Math.ceil(recipe.readyInMinutes / recipe.instructions.length)} min</span>
                   </div>
                 </div>
 
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={handlePrevious}
                     disabled={currentStep === 0}
-                    className="text-xs sm:text-sm"
+                    className="text-xs sm:text-sm px-2 sm:px-3"
                   >
-                    <SkipBack className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                    <SkipBack className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                     <span className="hidden sm:inline">Previous</span>
                     <span className="sm:hidden">Prev</span>
                   </Button>
@@ -752,11 +757,11 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
                     size="sm"
                     onClick={handleNext}
                     disabled={currentStep >= recipe.instructions.length - 1}
-                    className="text-xs sm:text-sm"
+                    className="text-xs sm:text-sm px-2 sm:px-3"
                   >
                     <span className="hidden sm:inline">Next Step</span>
                     <span className="sm:hidden">Next</span>
-                    <SkipForward className="w-3 h-3 sm:w-4 sm:h-4 ml-1 sm:ml-2" />
+                    <SkipForward className="w-3 h-3 sm:w-4 sm:h-4 ml-1" />
                   </Button>
                 </div>
               </CardContent>
@@ -768,23 +773,30 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
             <Card>
               <CardContent className="p-3 sm:p-4">
                 <h4 className="font-medium mb-3 text-sm sm:text-base">All Ingredients</h4>
-                <div className="grid grid-cols-1 gap-2">
+                <div className="space-y-2 max-h-60 overflow-y-auto">
                   {recipe.ingredients.map((ingredient, index) => (
                     <div
                       key={ingredient.id}
-                      className={`flex items-center justify-between p-2 rounded text-xs sm:text-sm ${
+                      className={`flex items-start justify-between p-2 rounded text-xs sm:text-sm ${
                         index === currentStep
                           ? 'bg-primary/10 border border-primary/20'
                           : completedIngredients.has(ingredient.id)
-                          ? 'bg-green-50 border border-green-200'
+                          ? 'bg-green-50 border border-green-200 dark:bg-green-900/20 dark:border-green-800'
                           : 'bg-muted'
                       }`}
                     >
-                      <span className="flex-1 pr-2">
-                        {formatQuantity(`${ingredient.amount} ${ingredient.unit}`)} {ingredient.name}
-                      </span>
+                      <div className="flex-1 pr-2 min-w-0">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-1">
+                          <span className="font-medium text-xs sm:text-sm">
+                            {formatQuantity(`${ingredient.amount} ${ingredient.unit}`)}
+                          </span>
+                          <span className="text-xs sm:text-sm break-words">
+                            {ingredient.name}
+                          </span>
+                        </div>
+                      </div>
                       {completedIngredients.has(ingredient.id) && (
-                        <CheckCircle2 className="w-3 h-3 sm:w-4 sm:h-4 text-green-500 flex-shrink-0" />
+                        <CheckCircle2 className="w-3 h-3 sm:w-4 sm:h-4 text-green-500 flex-shrink-0 mt-0.5" />
                       )}
                     </div>
                   ))}
