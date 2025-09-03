@@ -1,8 +1,8 @@
-# FlavorSwipe - Recipe Discovery App
+# Feastly - Recipe Discovery App
 
 ## Overview
 
-FlavorSwipe is a modern recipe discovery application built as a full-stack web app. It allows users to swipe through recipes (similar to dating apps), save favorites to their cookbook, and generate shopping lists from saved recipes. The app integrates with the Spoonacular API for recipe data and uses Replit's authentication system for user management.
+Feastly is a modern recipe discovery application built as a full-stack web app. It allows users to swipe through recipes (similar to dating apps), save favorites to their cookbook, and generate shopping lists from saved recipes. The app integrates with the Spoonacular API for recipe data and uses Replit's authentication system for user management.
 
 ## User Preferences
 

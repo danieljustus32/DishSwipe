@@ -21,7 +21,7 @@ const tutorials: Record<TutorialType, Tutorial> = {
     steps: [
       {
         id: 'welcome-step-1',
-        title: 'Welcome to FlavorSwipe!',
+        title: 'Welcome to Feastly!',
         description: 'Discover amazing recipes by swiping right to save or left to skip. Let\'s explore the app together!',
         targetElement: '[data-tutorial="recipe-stack"]'
       },

@@ -3,9 +3,15 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Progress } from "@/components/ui/progress";
-import { Search, Heart, ShoppingCart, User, Crown } from "lucide-react";
+import { Search, Heart, ShoppingCart, User, Crown, LogOut } from "lucide-react";
 import RecipeCardStack from "@/components/recipe-card-stack";
 import RecipeModal from "@/components/recipe-modal";
 import CookbookView from "@/components/cookbook-view";
@@ -66,21 +72,21 @@ export default function Home() {
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   const [isLoadingRecipes, setIsLoadingRecipes] = useState(true);
   const [isAppInitialized, setIsAppInitialized] = useState(false);
-  
+
   // Onboarding tutorial
-  const { 
-    currentTutorial, 
-    currentStep, 
-    skipTutorial, 
-    nextStep, 
+  const {
+    currentTutorial,
+    currentStep,
+    skipTutorial,
+    nextStep,
     isTutorialActive,
     startTutorial,
-    completedTutorials
+    completedTutorials,
   } = useOnboarding();
 
   // Fetch user status for usage tracking
   const { data: userStatus } = useQuery<UserStatus>({
-    queryKey: ['/api/user/status'],
+    queryKey: ["/api/user/status"],
     retry: false,
     enabled: !!user,
   });
@@ -117,24 +123,24 @@ export default function Home() {
       // Load multiple batches of recipes for a better stack experience
       const batchPromises = [];
       const batchesToLoad = recipes.length === 0 ? 3 : 2; // Load 3 batches initially, 2 batches when refilling
-      
+
       for (let i = 0; i < batchesToLoad; i++) {
         batchPromises.push(
           fetch("/api/recipes/discover", {
             credentials: "include",
-          }).then(res => {
+          }).then((res) => {
             if (!res.ok) {
               throw new Error(`${res.status}: ${res.statusText}`);
             }
             return res.json();
-          })
+          }),
         );
       }
 
       const batchResults = await Promise.all(batchPromises);
       const newRecipes = batchResults.flat();
-      
-      setRecipes(prev => [...prev, ...newRecipes]);
+
+      setRecipes((prev) => [...prev, ...newRecipes]);
     } catch (error) {
       if (isUnauthorizedError(error as Error)) {
         toast({
@@ -180,7 +186,8 @@ export default function Home() {
         const data = await preferenceResponse.json();
         toast({
           title: "Daily Limit Reached",
-          description: "You've reached your daily limit of 50 likes. Upgrade to FlavorSwipe Gold for unlimited likes!",
+          description:
+            "You've reached your daily limit of 50 likes. Upgrade to Feastly Gold for unlimited likes!",
           variant: "destructive",
           duration: 1000,
         });
@@ -189,7 +196,7 @@ export default function Home() {
 
       if (preferenceResponse.ok) {
         // Update user status to reflect new usage
-        queryClient.invalidateQueries({ queryKey: ['/api/user/status'] });
+        queryClient.invalidateQueries({ queryKey: ["/api/user/status"] });
       }
 
       // If liked, save to cookbook
@@ -202,11 +209,11 @@ export default function Home() {
             recipeId: currentRecipe.id,
           }),
         });
-        
+
         if (response.ok) {
           // Invalidate cookbook cache to ensure fresh data
           queryClient.invalidateQueries({ queryKey: ["/api/cookbook"] });
-          
+
           toast({
             title: "Recipe Saved!",
             description: `${currentRecipe.title} added to your cookbook`,
@@ -237,12 +244,12 @@ export default function Home() {
 
   const handleViewChange = async (view: ViewType) => {
     setCurrentView(view);
-    
+
     // Start tutorial for specific tabs if not completed
-    if (view === 'cookbook' && !completedTutorials.has('cookbook')) {
-      await startTutorial('cookbook');
-    } else if (view === 'shopping' && !completedTutorials.has('shopping')) {
-      await startTutorial('shopping');
+    if (view === "cookbook" && !completedTutorials.has("cookbook")) {
+      await startTutorial("cookbook");
+    } else if (view === "shopping" && !completedTutorials.has("shopping")) {
+      await startTutorial("shopping");
     }
   };
 
@@ -267,7 +274,9 @@ export default function Home() {
       <div className="min-h-screen bg-gradient-to-br from-orange-50 to-red-50 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground text-lg">Preparing your recipes...</p>
+          <p className="text-muted-foreground text-lg">
+            Preparing your recipes...
+          </p>
         </div>
       </div>
     );
@@ -280,32 +289,39 @@ export default function Home() {
         <header className="bg-primary text-primary-foreground p-4">
           <div className="flex justify-between items-center">
             <h1 className="text-xl font-bold flex items-center gap-2">
-              FlavorSwipe
+              Feastly
               {userStatus?.isGoldMember && (
                 <Crown className="w-5 h-5 text-yellow-400" />
               )}
             </h1>
             <div className="flex items-center space-x-2">
-              <Link href="/profile">
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  className="text-primary-foreground hover:bg-primary-foreground/10"
-                >
-                  <User className="w-4 h-4" />
-                </Button>
-              </Link>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={handleLogout}
-                className="text-primary-foreground hover:bg-primary-foreground/10"
-              >
-                Logout
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-primary-foreground hover:bg-primary-foreground/10"
+                  >
+                    <User className="w-4 h-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem asChild>
+                    <Link href="/profile" className="w-full flex items-center">
+                      <User className="w-4 h-4 mr-2" />
+                      Profile
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive">
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Logout
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
-          
+
           {/* Usage Progress Bar for non-Gold users */}
           {userStatus && !userStatus.isGoldMember && (
             <div className="mt-3 space-y-1">
@@ -313,8 +329,8 @@ export default function Home() {
                 <span>Daily Likes</span>
                 <span>{50 - userStatus.remainingLikes} / 50</span>
               </div>
-              <Progress 
-                value={((50 - userStatus.remainingLikes) / 50) * 100} 
+              <Progress
+                value={((50 - userStatus.remainingLikes) / 50) * 100}
                 className="h-1"
               />
               <div className="text-xs text-primary-foreground/80">
