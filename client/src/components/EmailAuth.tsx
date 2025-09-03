@@ -123,7 +123,7 @@ export function EmailAuth({ onSuccess }: EmailAuthProps) {
     },
     onSuccess: () => {
       toast({
-        title: "Welcome to Feastly!",
+        title: "Welcome to FlavorSwipe!",
         description: "Your account has been created successfully.",
       });
       onSuccess?.();

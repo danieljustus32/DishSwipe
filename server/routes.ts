@@ -555,10 +555,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await storage.updateUserStripeInfo(userId, customer.id);
       }
 
-      // Create a simple subscription for Feastly Gold ($9.99/month)
+      // Create a simple subscription for FlavorSwipe Gold ($9.99/month)
       // First create a product and price
       const product = await stripe.products.create({
-        name: 'Feastly Gold',
+        name: 'FlavorSwipe Gold',
         description: 'Unlimited recipe likes and premium features',
       });
 

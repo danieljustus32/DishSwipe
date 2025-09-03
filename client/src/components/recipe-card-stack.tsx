@@ -374,7 +374,7 @@ export default function RecipeCardStack({
 
       {/* Action Buttons - only show when there's a current recipe */}
       {recipes[currentIndex] && !animatingCard && (
-        <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-6 z-20" data-tutorial="swipe-buttons">
+        <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-6 z-20">
           <Button
             size="lg"
             variant="outline"

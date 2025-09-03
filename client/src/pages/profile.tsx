@@ -56,7 +56,7 @@ function SubscriptionForm({ clientSecret }: { clientSecret: string }) {
       });
     } else {
       toast({
-        title: "Welcome to Feastly Gold!",
+        title: "Welcome to FlavorSwipe Gold!",
         description: "Your subscription is now active. Enjoy unlimited recipe likes!",
         duration: 1000,
       });
@@ -75,7 +75,7 @@ function SubscriptionForm({ clientSecret }: { clientSecret: string }) {
         className="w-full"
         size="lg"
       >
-        {isLoading ? "Processing..." : "Subscribe to Feastly Gold"}
+        {isLoading ? "Processing..." : "Subscribe to FlavorSwipe Gold"}
       </Button>
     </form>
   );
@@ -97,7 +97,7 @@ function SubscriptionCard() {
       } else {
         toast({
           title: "Already Subscribed",
-          description: "You're already a Feastly Gold member!",
+          description: "You're already a FlavorSwipe Gold member!",
           duration: 1000,
         });
       }
@@ -127,7 +127,7 @@ function SubscriptionCard() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Crown className="h-5 w-5 text-yellow-500" />
-              Complete Your Feastly Gold Subscription
+              Complete Your FlavorSwipe Gold Subscription
             </CardTitle>
             <CardDescription>
               Enter your payment details to activate unlimited recipe likes
@@ -146,7 +146,7 @@ function SubscriptionCard() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Crown className="h-5 w-5 text-yellow-500" />
-          Feastly Gold
+          FlavorSwipe Gold
         </CardTitle>
         <CardDescription>
           Upgrade to unlimited recipe likes and premium features
@@ -215,7 +215,7 @@ export default function Profile() {
       queryClient.invalidateQueries({ queryKey: ['/api/user/status'] });
       toast({
         title: "Subscription Cancelled",
-        description: "Your Feastly Gold subscription has been cancelled. You'll continue to have access until your billing period ends.",
+        description: "Your FlavorSwipe Gold subscription has been cancelled. You'll continue to have access until your billing period ends.",
       });
     },
     onError: (error) => {
@@ -344,7 +344,7 @@ export default function Profile() {
                 {userStatus.isGoldMember ? (
                   <>
                     <Crown className="h-5 w-5 text-yellow-500" />
-                    Feastly Gold
+                    FlavorSwipe Gold
                   </>
                 ) : (
                   "Free Account"
@@ -371,7 +371,7 @@ export default function Profile() {
                     className="mt-4"
                     disabled={cancelSubscription.isPending}
                     onClick={() => {
-                      if (confirm("Are you sure you want to cancel your Feastly Gold subscription? You'll lose unlimited likes and premium features.")) {
+                      if (confirm("Are you sure you want to cancel your FlavorSwipe Gold subscription? You'll lose unlimited likes and premium features.")) {
                         cancelSubscription.mutate();
                       }
                     }}

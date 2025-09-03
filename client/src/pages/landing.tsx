@@ -34,7 +34,7 @@ export default function Landing() {
         <div className="max-w-md mx-auto bg-white shadow-xl min-h-screen">
           {/* Header */}
           <div className="bg-primary text-primary-foreground p-6 text-center">
-            <h1 className="text-3xl font-bold mb-2">Feastly</h1>
+            <h1 className="text-3xl font-bold mb-2">FlavorSwipe</h1>
             <p className="text-primary-foreground/80">Discover recipes you'll love</p>
           </div>
 
@@ -62,7 +62,7 @@ export default function Landing() {
       <div className="max-w-md mx-auto bg-white shadow-xl min-h-screen">
         {/* Header */}
         <div className="bg-primary text-primary-foreground p-6 text-center">
-          <h1 className="text-3xl font-bold mb-2">Feastly</h1>
+          <h1 className="text-3xl font-bold mb-2">FlavorSwipe</h1>
           <p className="text-primary-foreground/80">Discover recipes you'll love</p>
         </div>
 
