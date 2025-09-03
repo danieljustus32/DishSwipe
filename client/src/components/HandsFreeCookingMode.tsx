@@ -551,10 +551,19 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="w-full max-w-4xl h-[100dvh] sm:h-[95vh] sm:max-h-[95vh] overflow-y-auto p-3 sm:p-6 mx-2 sm:mx-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+          {/* On very narrow screens, place icon at top left and title below */}
+          <div className="flex items-start justify-between sm:hidden mb-2">
+            <ChefHat className="w-5 h-5 mt-1" />
+            {/* Close button space is handled by DialogContent automatically */}
+          </div>
+          <DialogTitle className="hidden sm:flex items-center gap-2">
             <ChefHat className="w-5 h-5" />
             Hands-Free Cooking: {recipe.title}
           </DialogTitle>
+          {/* Mobile title without DialogTitle wrapper to avoid duplicate ARIA labels */}
+          <div className="block sm:hidden text-left text-lg font-semibold leading-none tracking-tight">
+            Hands-Free Cooking: {recipe.title}
+          </div>
         </DialogHeader>
 
         <div className="space-y-6">
