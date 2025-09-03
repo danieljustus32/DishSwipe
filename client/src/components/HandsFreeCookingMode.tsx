@@ -231,6 +231,15 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
     if (isOpen) {
       speak("Welcome to hands-free cooking mode! I'll guide you through preparing " + recipe.title + ". Say 'help' to hear available commands.");
       
+      // Announce the first ingredient after welcome message
+      setTimeout(() => {
+        const firstIngredient = recipe.ingredients[0];
+        if (firstIngredient) {
+          const ingredientText = formatIngredientDescription(firstIngredient.amount, firstIngredient.unit, firstIngredient.name);
+          speak(`First ingredient: Measure ${ingredientText}.`);
+        }
+      }, 2000); // Give time for welcome message to finish
+      
       // Start listening automatically when modal opens
       setTimeout(() => {
         if (recognitionRef.current && !isListening) {
@@ -245,7 +254,7 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
             console.error('Error auto-starting speech recognition:', error);
           }
         }
-      }, 1000); // Give time for speech synthesis to finish
+      }, 4000); // Give time for speech synthesis to finish
     } else {
       // Clean up when modal is closed
       if (recognitionRef.current) {
