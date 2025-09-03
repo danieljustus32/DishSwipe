@@ -238,7 +238,7 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
           const ingredientText = formatIngredientDescription(firstIngredient.amount, firstIngredient.unit, firstIngredient.name);
           speak(`First ingredient: Measure ${ingredientText}.`);
         }
-      }, 2000); // Give time for welcome message to finish
+      }, 1000); // 1 second delay between welcome and first ingredient
       
       // Start listening automatically when modal opens
       setTimeout(() => {
@@ -254,7 +254,7 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
             console.error('Error auto-starting speech recognition:', error);
           }
         }
-      }, 4000); // Give time for speech synthesis to finish
+      }, 1000); // Start listening right after first ingredient is queued
     } else {
       // Clean up when modal is closed
       if (recognitionRef.current) {
