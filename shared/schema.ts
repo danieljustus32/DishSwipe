@@ -38,6 +38,10 @@ export const users = pgTable("users", {
   googleId: varchar("google_id"),
   appleId: varchar("apple_id"),
   replitId: varchar("replit_id"),
+  // Email confirmation fields
+  isEmailConfirmed: boolean("is_email_confirmed").default(false),
+  emailConfirmationToken: varchar("email_confirmation_token"),
+  emailConfirmationExpires: timestamp("email_confirmation_expires"),
   // Stripe fields
   stripeCustomerId: varchar("stripe_customer_id"),
   stripeSubscriptionId: varchar("stripe_subscription_id"),
