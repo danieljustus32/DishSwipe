@@ -5,7 +5,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 
 import { Progress } from "@/components/ui/progress";
-import { Search, Heart, ShoppingCart, User, Crown } from "lucide-react";
+import { Search, Heart, ShoppingCart, User, Crown, LogOut } from "lucide-react";
 import RecipeCardStack from "@/components/recipe-card-stack";
 import RecipeModal from "@/components/recipe-modal";
 import CookbookView from "@/components/cookbook-view";
@@ -14,6 +14,13 @@ import { isUnauthorizedError } from "@/lib/authUtils";
 import { Link } from "wouter";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import OnboardingTutorial from "@/components/OnboardingTutorial";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 type ViewType = "discover" | "cookbook" | "shopping";
 
@@ -285,25 +292,31 @@ export default function Home() {
                 <Crown className="w-5 h-5 text-yellow-400" />
               )}
             </h1>
-            <div className="flex items-center space-x-2">
-              <Link href="/profile">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
                 <Button 
                   variant="ghost" 
                   size="sm"
                   className="text-primary-foreground hover:bg-primary-foreground/10"
+                  data-testid="button-profile-menu"
                 >
                   <User className="w-4 h-4" />
                 </Button>
-              </Link>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={handleLogout}
-                className="text-primary-foreground hover:bg-primary-foreground/10"
-              >
-                Logout
-              </Button>
-            </div>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem asChild>
+                  <Link href="/profile" className="flex items-center cursor-pointer" data-testid="link-profile">
+                    <User className="w-4 h-4 mr-2" />
+                    Profile
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout} className="cursor-pointer" data-testid="button-logout">
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Logout
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
           
           {/* Usage Progress Bar for non-Gold users */}
