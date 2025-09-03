@@ -229,7 +229,7 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
 
   useEffect(() => {
     if (isOpen) {
-      speak("Welcome to hands-free cooking mode! I'll guide you through preparing " + recipe.title + ". Say 'help' to hear available commands.");
+      speak("Let's cook " + recipe.title + "!");
       
       // Start listening automatically when modal opens
       setTimeout(() => {
@@ -313,21 +313,38 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
         console.log('Generating natural voice for:', text.substring(0, 50) + '...');
         
         try {
-          // Call our TTS API endpoint
-          const response = await fetch('/api/voice/tts', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ text }),
-          });
+          // Call our TTS API endpoint with retry logic for network issues
+          let retryCount = 0;
+          const maxRetries = 2;
+          let response;
+          
+          while (retryCount <= maxRetries) {
+            try {
+              response = await fetch('/api/voice/tts', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ text }),
+                signal: AbortSignal.timeout(10000), // 10 second timeout
+              });
 
-          if (!response.ok) {
-            throw new Error(`TTS API error: ${response.status}`);
+              if (!response.ok) {
+                throw new Error(`TTS API error: ${response.status}`);
+              }
+              break; // Success, exit retry loop
+            } catch (error) {
+              retryCount++;
+              if (retryCount > maxRetries) {
+                throw error; // Give up after max retries
+              }
+              // Wait before retrying (exponential backoff)
+              await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+            }
           }
 
           // Get the audio data as a blob
-          const audioBlob = await response.blob();
+          const audioBlob = await response!.blob();
           const audioUrl = URL.createObjectURL(audioBlob);
 
           // Play the audio and wait for it to finish
@@ -479,9 +496,9 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
         const ingredient = recipe.ingredients[nextStep];
         const formattedAmount = formatQuantity(`${ingredient.amount} ${ingredient.unit}`);
         const ingredientDescription = formatIngredientDescription(ingredient.amount, ingredient.unit, ingredient.name);
-        speak(`Next ingredient: Measure ${ingredientDescription}.`);
+        speak(`Measure ${ingredientDescription}.`);
       } else {
-        speak("All ingredients measured! Say 'start cooking' to begin the cooking instructions.");
+        speak("Ready to cook! Say 'start cooking'.");
       }
     } else {
       const nextStep = currentStepValue + 1;
@@ -511,7 +528,7 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
         const ingredient = recipe.ingredients[prevStep];
         const formattedAmount = formatQuantity(`${ingredient.amount} ${ingredient.unit}`);
         const ingredientDescription = formatIngredientDescription(ingredient.amount, ingredient.unit, ingredient.name);
-        speak(`Previous ingredient: Measure ${ingredientDescription}.`);
+        speak(`Measure ${ingredientDescription}.`);
       } else {
         speak(`Step ${prevStep + 1}: ${recipe.instructions[prevStep]}`);
       }
@@ -525,7 +542,7 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
       const ingredient = recipe.ingredients[currentStep];
       const formattedAmount = formatQuantity(`${ingredient.amount} ${ingredient.unit}`);
       const ingredientDescription = formatIngredientDescription(ingredient.amount, ingredient.unit, ingredient.name);
-      speak(`Current ingredient: Measure ${ingredientDescription}.`);
+      speak(`Measure ${ingredientDescription}.`);
     } else {
       speak(`Current step: ${recipe.instructions[currentStep]}`);
     }
@@ -535,7 +552,13 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
     if (phase === 'preparation') {
       const ingredientId = recipe.ingredients[currentStep].id;
       setCompletedIngredients(prev => new Set(Array.from(prev).concat([ingredientId])));
-      speak("Ingredient marked as measured! Say 'next' for the next ingredient.");
+      
+      // Auto-advance to next ingredient without TTS
+      const nextStep = currentStep + 1;
+      if (nextStep < recipe.ingredients.length) {
+        setCurrentStep(nextStep);
+        currentStepRef.current = nextStep;
+      }
     }
   };
 
@@ -545,7 +568,7 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
     phaseRef.current = 'cooking';
     setCurrentStep(0);
     currentStepRef.current = 0;
-    speak(`Starting cooking phase! Step 1: ${recipe.instructions[0]}`);
+    speak(`Step 1: ${recipe.instructions[0]}`);
   };
 
   const startListening = () => {
