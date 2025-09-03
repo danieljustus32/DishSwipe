@@ -472,11 +472,16 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
   };
 
   const handlePrevious = () => {
-    if (currentStep > 0) {
-      const prevStep = currentStep - 1;
+    const currentStepValue = currentStepRef.current;
+    const currentPhase = phaseRef.current;
+    console.log('handlePrevious called - phase:', currentPhase, 'currentStep:', currentStepValue);
+    
+    if (currentStepValue > 0) {
+      const prevStep = currentStepValue - 1;
       setCurrentStep(prevStep);
+      currentStepRef.current = prevStep;
       
-      if (phase === 'preparation') {
+      if (currentPhase === 'preparation') {
         const ingredient = recipe.ingredients[prevStep];
         const formattedAmount = formatQuantity(`${ingredient.amount} ${ingredient.unit}`);
         speak(`Previous ingredient: Measure ${formattedAmount} of ${ingredient.name}.`);
