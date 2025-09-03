@@ -691,14 +691,14 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
                     <div className="flex flex-col sm:flex-row sm:items-center gap-2 text-base sm:text-lg">
                       <div className="flex items-center gap-2">
                         <Scale className="w-4 h-4 sm:w-5 sm:h-5 text-orange-500 flex-shrink-0" />
-                        <span className="font-medium">
-                          {formatQuantity(`${getCurrentIngredient()?.amount} ${getCurrentIngredient()?.unit}`)}
+                        <span className="font-medium break-words">
+                          {getCurrentIngredient() && formatIngredientDescription(
+                            getCurrentIngredient().amount,
+                            getCurrentIngredient().unit,
+                            getCurrentIngredient().name
+                          )}
                         </span>
                       </div>
-                      <span className="hidden sm:inline">of</span>
-                      <span className="font-semibold text-primary break-words">
-                        {getCurrentIngredient()?.name}
-                      </span>
                     </div>
                   </div>
                   {completedIngredients.has(getCurrentIngredient()?.id) && (
