@@ -829,11 +829,8 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
                     >
                       <div className="flex-1 pr-2 min-w-0">
                         <div className="flex flex-col sm:flex-row sm:items-center gap-1">
-                          <span className="font-medium text-xs sm:text-sm">
-                            {formatQuantity(`${ingredient.amount} ${ingredient.unit}`)}
-                          </span>
-                          <span className="text-xs sm:text-sm break-words">
-                            {ingredient.name}
+                          <span className="font-medium text-xs sm:text-sm break-words">
+                            {formatIngredientDescription(ingredient.amount, ingredient.unit, ingredient.name)}
                           </span>
                         </div>
                       </div>
