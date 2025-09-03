@@ -13,7 +13,7 @@ export interface Tutorial {
   steps: TutorialStep[];
 }
 
-export type TutorialType = 'welcome' | 'cookbook' | 'shopping';
+export type TutorialType = 'welcome' | 'swipe' | 'cookbook' | 'shopping';
 
 const tutorials: Record<TutorialType, Tutorial> = {
   welcome: {
@@ -22,14 +22,19 @@ const tutorials: Record<TutorialType, Tutorial> = {
       {
         id: 'welcome-step-1',
         title: 'Welcome to Feastly!',
-        description: 'Discover amazing recipes by swiping right to save or left to skip. Let\'s explore the app together!',
+        description: 'Discover amazing recipes with fun, interactive swiping. Let\'s start with a quick tutorial!',
         targetElement: '[data-tutorial="recipe-stack"]'
-      },
+      }
+    ]
+  },
+  swipe: {
+    id: 'swipe',
+    steps: [
       {
-        id: 'welcome-step-2', 
-        title: 'Swipe to Discover',
-        description: 'Swipe right ❤️ to save recipes to your cookbook, or swipe left ✖️ to skip. You can also use the buttons below.',
-        targetElement: '[data-tutorial="swipe-buttons"]'
+        id: 'swipe-step-1',
+        title: 'Interactive Swipe Tutorial',
+        description: 'Learn how to swipe through recipes with our guided tutorial.',
+        targetElement: '[data-tutorial="recipe-stack"]'
       }
     ]
   },
@@ -69,8 +74,13 @@ const tutorials: Record<TutorialType, Tutorial> = {
   }
 };
 
+interface User {
+  id: string;
+  [key: string]: any;
+}
+
 export function useOnboarding() {
-  const { user } = useAuth();
+  const { user } = useAuth() as { user: User | null; isLoading: boolean };
   const [currentTutorial, setCurrentTutorial] = useState<TutorialType | null>(null);
   const [currentStep, setCurrentStep] = useState(0);
   const [isTutorialActive, setIsTutorialActive] = useState(false);
@@ -98,13 +108,13 @@ export function useOnboarding() {
         localStorage.setItem('flavorswipe-tutorial-user-id', user.id);
         setCompletedTutorials(new Set());
       } else if (saved) {
-        const tutorialArray = JSON.parse(saved);
-        const completedSet = new Set(tutorialArray);
+        const tutorialArray = JSON.parse(saved) as TutorialType[];
+        const completedSet = new Set<TutorialType>(tutorialArray);
         setCompletedTutorials(completedSet);
         localStorage.setItem('flavorswipe-tutorial-user-id', user.id);
         
         // If all tutorials are completed, make sure tutorial is inactive
-        if (completedSet.has('welcome') && completedSet.has('cookbook') && completedSet.has('shopping')) {
+        if (completedSet.has('welcome') && completedSet.has('swipe') && completedSet.has('cookbook') && completedSet.has('shopping')) {
           setIsTutorialActive(false);
           setCurrentTutorial(null);
           setCurrentStep(0);
@@ -158,7 +168,7 @@ export function useOnboarding() {
         setCurrentTutorial('welcome');
         setCurrentStep(0);
         setIsTutorialActive(true);
-      } else if (completedTutorials.has('welcome') && completedTutorials.has('cookbook') && completedTutorials.has('shopping') && isTutorialActive) {
+      } else if (completedTutorials.has('welcome') && completedTutorials.has('swipe') && completedTutorials.has('cookbook') && completedTutorials.has('shopping') && isTutorialActive) {
         // If ALL tutorials are completed but tutorial is still active, deactivate it
         console.log('All tutorials completed, deactivating tutorial');
         setIsTutorialActive(false);
@@ -208,8 +218,19 @@ export function useOnboarding() {
     if (currentStep < tutorial.steps.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
-      // End current tutorial
-      await endTutorial();
+      // Mark current tutorial as completed
+      setCompletedTutorials(prev => new Set([...Array.from(prev), currentTutorial]));
+      
+      // Check if we should start the next tutorial in sequence
+      if (currentTutorial === 'welcome' && !completedTutorials.has('swipe')) {
+        // Start swipe tutorial after welcome
+        setCurrentTutorial('swipe');
+        setCurrentStep(0);
+        // Don't end tutorial, continue to swipe tutorial
+      } else {
+        // End current tutorial
+        await endTutorial();
+      }
     }
   };
 
@@ -234,19 +255,27 @@ export function useOnboarding() {
     setCurrentStep(0);
   };
 
+  const startSwipeTutorial = () => {
+    setCurrentTutorial('swipe');
+    setCurrentStep(0);
+    setIsTutorialActive(true);
+  };
+
   const skipTutorial = async () => {
     await endTutorial();
   };
 
   // Computed value to ensure tutorial is never shown if all are completed
   const shouldShowTutorial = isLoaded && isTutorialActive && currentTutorial && 
-    !(completedTutorials.has('welcome') && completedTutorials.has('cookbook') && completedTutorials.has('shopping'));
+    !(completedTutorials.has('welcome') && completedTutorials.has('swipe') && completedTutorials.has('cookbook') && completedTutorials.has('shopping'));
 
   return {
     currentTutorial: currentTutorial ? tutorials[currentTutorial] : null,
+    currentTutorialType: currentTutorial,
     currentStep,
     isTutorialActive: shouldShowTutorial,
     startTutorial,
+    startSwipeTutorial,
     nextStep,
     skipTutorial,
     completedTutorials

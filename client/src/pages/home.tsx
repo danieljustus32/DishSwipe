@@ -20,6 +20,7 @@ import { isUnauthorizedError } from "@/lib/authUtils";
 import { Link } from "wouter";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import OnboardingTutorial from "@/components/OnboardingTutorial";
+import SwipeTutorial from "@/components/SwipeTutorial";
 
 type ViewType = "discover" | "cookbook" | "shopping";
 
@@ -76,11 +77,13 @@ export default function Home() {
   // Onboarding tutorial
   const {
     currentTutorial,
+    currentTutorialType,
     currentStep,
     skipTutorial,
     nextStep,
     isTutorialActive,
     startTutorial,
+    startSwipeTutorial,
     completedTutorials,
   } = useOnboarding();
 
@@ -390,7 +393,7 @@ export default function Home() {
         {/* Main Content */}
         <main className="relative h-[calc(100vh-140px)] overflow-hidden">
           {currentView === "discover" && (
-            <div className="absolute inset-0 p-4">
+            <div className="absolute inset-0 p-4" data-tutorial="recipe-stack">
               <RecipeCardStack
                 recipes={recipes}
                 currentIndex={currentRecipeIndex}
@@ -414,12 +417,20 @@ export default function Home() {
         )}
 
         {/* Onboarding Tutorial */}
-        {isTutorialActive && currentTutorial && (
+        {isTutorialActive && currentTutorial && currentTutorialType !== 'swipe' && (
           <OnboardingTutorial
             tutorial={currentTutorial}
             step={currentStep}
             onSkip={skipTutorial}
             onNext={nextStep}
+          />
+        )}
+
+        {/* Interactive Swipe Tutorial */}
+        {isTutorialActive && currentTutorialType === 'swipe' && (
+          <SwipeTutorial
+            onComplete={nextStep}
+            onSkip={skipTutorial}
           />
         )}
       </div>
