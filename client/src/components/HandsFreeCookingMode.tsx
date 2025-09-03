@@ -60,6 +60,21 @@ const voiceCommands: VoiceCommand[] = [
   { phrases: ['help', 'commands'], action: 'help', description: 'Show voice commands' }
 ];
 
+// Helper function to format ingredient descriptions with proper grammar
+const formatIngredientDescription = (amount: number, unit: string, name: string): string => {
+  const formattedAmount = formatQuantity(`${amount} ${unit}`);
+  
+  // If the unit contains descriptive words like "pieces", "slices", etc., use "of"
+  const descriptiveUnits = ['piece', 'pieces', 'slice', 'slices', 'strip', 'strips', 'chunk', 'chunks', 'clove', 'cloves'];
+  const shouldUseOf = descriptiveUnits.some(descriptiveUnit => unit.toLowerCase().includes(descriptiveUnit));
+  
+  if (shouldUseOf) {
+    return `${formattedAmount} of ${name}`;
+  } else {
+    return `${formattedAmount} ${name}`;
+  }
+};
+
 export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsFreeCookingModeProps) {
   const [phase, setPhase] = useState<CookingPhase>('preparation');
   const [currentStep, setCurrentStep] = useState(0);
@@ -453,7 +468,8 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
         
         const ingredient = recipe.ingredients[nextStep];
         const formattedAmount = formatQuantity(`${ingredient.amount} ${ingredient.unit}`);
-        speak(`Next ingredient: Measure ${formattedAmount} of ${ingredient.name}.`);
+        const ingredientDescription = formatIngredientDescription(ingredient.amount, ingredient.unit, ingredient.name);
+        speak(`Next ingredient: Measure ${ingredientDescription}.`);
       } else {
         speak("All ingredients measured! Say 'start cooking' to begin the cooking instructions.");
       }
@@ -484,7 +500,8 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
       if (currentPhase === 'preparation') {
         const ingredient = recipe.ingredients[prevStep];
         const formattedAmount = formatQuantity(`${ingredient.amount} ${ingredient.unit}`);
-        speak(`Previous ingredient: Measure ${formattedAmount} of ${ingredient.name}.`);
+        const ingredientDescription = formatIngredientDescription(ingredient.amount, ingredient.unit, ingredient.name);
+        speak(`Previous ingredient: Measure ${ingredientDescription}.`);
       } else {
         speak(`Step ${prevStep + 1}: ${recipe.instructions[prevStep]}`);
       }
@@ -497,7 +514,8 @@ export default function HandsFreeCookingMode({ recipe, isOpen, onClose }: HandsF
     if (phase === 'preparation') {
       const ingredient = recipe.ingredients[currentStep];
       const formattedAmount = formatQuantity(`${ingredient.amount} ${ingredient.unit}`);
-      speak(`Current ingredient: Measure ${formattedAmount} of ${ingredient.name}.`);
+      const ingredientDescription = formatIngredientDescription(ingredient.amount, ingredient.unit, ingredient.name);
+      speak(`Current ingredient: Measure ${ingredientDescription}.`);
     } else {
       speak(`Current step: ${recipe.instructions[currentStep]}`);
     }
