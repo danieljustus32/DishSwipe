@@ -112,6 +112,7 @@ export default function CookbookView() {
     },
     onSuccess: (_, recipeId) => {
       const recipe = userRecipes.find(ur => ur.recipe.id === recipeId)?.recipe;
+      queryClient.invalidateQueries({ queryKey: ["/api/shopping-list"] });
       toast({
         title: "Added to Shopping List!",
         description: `Ingredients for ${recipe?.title} added to your shopping list`,
