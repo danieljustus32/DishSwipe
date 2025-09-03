@@ -770,11 +770,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            model: 'tts-1', // Use standard model for faster generation
+            model: 'tts-1',
             voice: 'nova',
             input: text.substring(0, 4000),
             response_format: 'mp3',
-            speed: 1.1 // Slightly faster speech for better flow
+            speed: 0.9
           }),
         });
 
@@ -800,8 +800,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         resolve(audioBuffer);
         
-        // Wait 500ms between requests for faster processing
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // Wait 1 second between requests to respect rate limits
+        await new Promise(resolve => setTimeout(resolve, 1000));
         
       } catch (error) {
         console.error('TTS queue processing error:', error);
